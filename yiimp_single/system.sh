@@ -217,7 +217,7 @@ sudo update-alternatives --set php /usr/bin/php8.1
 print_success "PHP version set to 8.1"
 
 print_header "Cloning YiiMP Repository"
-hide_output sudo git clone https://github.com/Kudaraidee/yiimp.git $STORAGE_ROOT/yiimp/yiimp_setup/yiimp > /dev/null 2>&1
+hide_output sudo git clone https://github.com/gtaAngelo/yiimp.git $STORAGE_ROOT/yiimp/yiimp_setup/yiimp > /dev/null 2>&1
 print_success "YiiMP repository cloned successfully"
 
 hide_output sudo service nginx restart
