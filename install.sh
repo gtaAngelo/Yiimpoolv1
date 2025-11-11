@@ -41,22 +41,18 @@ install_git() {
 # Function to clone or update the Yiimpool installer repository
 clone_or_update_repo() {
   if [ ! -d "$YIIMPOOL_INSTALL_DIR" ]; then
-    echo "Cloning Yiimpool Installer ${TAG}..."
-    git clone -b "${TAG}" --depth 1 https://github.com/gtaAngelo/Yiimpoolv1 "$YIIMPOOL_INSTALL_DIR" < /dev/null
+    echo "Cloning Yiimpool Installer..."
+    git clone --depth 1 https://github.com/gtaAngelo/Yiimpoolv1 "$YIIMPOOL_INSTALL_DIR" < /dev/null
     echo "Repository cloned."
   else
-    echo "Updating Yiimpool Installer to ${TAG}..."
+    echo "Updating Yiimpool Installer..."
     cd "$YIIMPOOL_INSTALL_DIR"
     sudo chown -R "$USER" "$YIIMPOOL_INSTALL_DIR/.git/"
-    git fetch --depth 1 --force --prune origin tag "${TAG}"
-    if ! git checkout -q "${TAG}"; then
-      log_error "Failed to update repository to ${TAG}."
-      exit 1
-    fi
-    echo "Repository updated."
+    git fetch --depth 1 --force --prune origin
+    git reset --hard origin/main 2>/dev/null || git reset --hard origin/master
+    echo "Repository updated to the latest version."
   fi
 }
-
 # Function to set the Yiimpool version in configuration file
 set_yiimpool_version() {
   echo "VERSION=${TAG}" | sudo tee "$YIIMPOOL_VERSION_FILE" >/dev/null
