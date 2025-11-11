@@ -103,7 +103,16 @@ SQL_FILES=(
     2024-04-23-add_pers_string.sql
     2024-04-29-add_sellthreshold.sql
     2025-02-06-add_usemweb.sql
-)
+    2024-05-04-add_neoscrypt_xaya_algo.sql
+    2025-02-13-add_xelisv2-pepew.sql
+    2025-02-23-add_algo_kawpow.sql
+    2025-03-31-rename_table_exchange.sql
+    2025-10-05-add_argon2d1000.sql
+    2025-10-07-add_yespowerADVC.sql
+    2025-10-27-add_flex.sql
+    2025-10-27-add_rinhash.sql
+    2025-10-28-add_algo_phihash.sql
+    )
 
 for file in "${SQL_FILES[@]}"; do
     print_status "Importing $file..."
