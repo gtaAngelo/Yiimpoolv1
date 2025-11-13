@@ -24,7 +24,7 @@ define('"'"'YAAMP_DBUSER'"'"', '"'"''"${YiiMPPanelName}"''"'"');
 define('"'"'YAAMP_DBPASSWORD'"'"', '"'"''"${PanelUserDBPassword}"''"'"');
 
 define('"'"'YAAMP_PRODUCTION'"'"', true);
-define('"'"'YAAMP_RENTAL'"'"', true); // set to true to enable rental system
+define('"'"'YAAMP_RENTAL'"'"', false); // set to true to enable rental system
 
 define('"'"'YAAMP_LIMIT_ESTIMATE'"'"', false);
 
@@ -38,8 +38,8 @@ define('"'"'YAAMP_TXFEE_RENTING_WD'"'"', 0.002);
 define('"'"'YAAMP_PAYMENTS_FREQ'"'"', 1*60*60); // set how often the pool will pay miners
 define('"'"'YAAMP_PAYMENTS_MINI'"'"', 0.001); // set minimum payment for miners
 
-define('"'"'YAAMP_ALLOW_EXCHANGE'"'"', true); // allow to exchange coins directly from site wallet
-define('"'"'YIIMP_PUBLIC_EXPLORER'"'"', true); // allow public view of site block explorer
+define('"'"'YAAMP_ALLOW_EXCHANGE'"'"', false); // allow to exchange coins directly from site wallet
+define('"'"'YIIMP_PUBLIC_EXPLORER'"'"', false); // allow public view of site block explorer
 define('"'"'YIIMP_PUBLIC_BENCHMARK'"'"', false); // allow public view of site benchmark page
 
 
@@ -68,7 +68,7 @@ define('"'"'YAAMP_USE_NGINX'"'"', true);
 // Automatic withdraw to Yaamp btc wallet if btc balance > 0.3
 define('"'"'EXCH_AUTO_WITHDRAW'"'"', 0.3);
 
-define('"'"'YAAMP_USE_NICEHASH_API'"'"', true);
+define('"'"'YAAMP_USE_NICEHASH_API'"'"', false);
 // nicehash keys deposit account & amount to deposit at a time
 define('"'"'NICEHASH_API_KEY'"'"','"'"'521c254d-8cc7-4319-83d2-ac6c604b5b49'"'"');
 define('"'"'NICEHASH_API_ID'"'"','"'"'9205'"'"');
@@ -112,7 +112,7 @@ define('"'"'YAAMP_DBUSER'"'"', '"'"''"${YiiMPPanelName}"''"'"');
 define('"'"'YAAMP_DBPASSWORD'"'"', '"'"''"${PanelUserDBPassword}"''"'"');
 
 define('"'"'YAAMP_PRODUCTION'"'"', true);
-define('"'"'YAAMP_RENTAL'"'"', true); // set to true to enable rental system
+define('"'"'YAAMP_RENTAL'"'"', false); // set to true to enable rental system
 
 define('"'"'YAAMP_LIMIT_ESTIMATE'"'"', false);
 
@@ -126,8 +126,8 @@ define('"'"'YAAMP_TXFEE_RENTING_WD'"'"', 0.002);
 define('"'"'YAAMP_PAYMENTS_FREQ'"'"', 1*60*60); // set how often the pool will pay miners
 define('"'"'YAAMP_PAYMENTS_MINI'"'"', 0.001); // set minimum payment for miners
 
-define('"'"'YAAMP_ALLOW_EXCHANGE'"'"', true); // allow to exchange coins directly from site wallet
-define('"'"'YIIMP_PUBLIC_EXPLORER'"'"', true); // allow public view of site block explorer
+define('"'"'YAAMP_ALLOW_EXCHANGE'"'"', false); // allow to exchange coins directly from site wallet
+define('"'"'YIIMP_PUBLIC_EXPLORER'"'"', false); // allow public view of site block explorer
 define('"'"'YIIMP_PUBLIC_BENCHMARK'"'"', false); // allow public view of site benchmark page
 
 
@@ -156,7 +156,7 @@ define('"'"'YAAMP_USE_NGINX'"'"', true);
 // Automatic withdraw to Yaamp btc wallet if btc balance > 0.3
 define('"'"'EXCH_AUTO_WITHDRAW'"'"', 0.3);
 
-define('"'"'YAAMP_USE_NICEHASH_API'"'"', true);
+define('"'"'YAAMP_USE_NICEHASH_API'"'"', false);
 // nicehash keys deposit account & amount to deposit at a time
 define('"'"'NICEHASH_API_KEY'"'"','"'"'521c254d-8cc7-4319-83d2-ac6c604b5b49'"'"');
 define('"'"'NICEHASH_API_ID'"'"','"'"'9205'"'"');
