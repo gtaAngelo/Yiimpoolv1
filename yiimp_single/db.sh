@@ -94,7 +94,7 @@ print_status "Importing main database dump..."
 sudo zcat 2024-03-06-complete_export.sql.gz | sudo mysql -u root -p"${DBRootPassword}" "${YiiMPDBName}"
 
 SQL_FILES=(
-    2024-03-18-add_aurum_algo.sql
+ 2024-03-18-add_aurum_algo.sql
     2024-03-29-add_github_version.sql
     2024-03-31-add_payout_threshold.sql
     2024-04-01-add_auto_exchange.sql
@@ -107,11 +107,7 @@ SQL_FILES=(
     2025-02-13-add_xelisv2-pepew.sql
     2025-02-23-add_algo_kawpow.sql
     2025-03-31-rename_table_exchange.sql
-    2025-10-05-add_argon2d1000.sql
-    2025-10-07-add_yespowerADVC.sql
-    2025-10-27-add_flex.sql
-    2025-10-27-add_rinhash.sql
-    2025-10-28-add_algo_phihash.sql
+
     )
 
 for file in "${SQL_FILES[@]}"; do
