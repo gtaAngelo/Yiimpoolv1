@@ -28,15 +28,12 @@ export LC_TYPE=en_US.UTF-8
 export NCURSES_NO_UTF8_ACS=1
 
 # Create the temporary installation directory if it doesn't already exist.
-echo Creating the temporary YiiMP installation folder...
-if [ ! -d $STORAGE_ROOT/yiimp/yiimp_setup ]; then
-sudo mkdir -p $STORAGE_ROOT/yiimp/yiimp_setup
+if [ ! -d "$STORAGE_ROOT/yiimp/yiimp_setup" ]; then
+    print_status "Creating temporary YiiMP setup directory..."
+    sudo mkdir -p "$STORAGE_ROOT/yiimp/yiimp_setup"
 fi
 
-# Start the installation.
-source $STORAGE_ROOT/yiimp/.yiimp.conf
+# Start the upgrade menu.
+source "$STORAGE_ROOT/yiimp/.yiimp.conf"
 source upgrade_warning.sh
 source menu.sh
-
-clear
-echo -e "$YELLOW Upgrade of your YiiMP stratum is now$GREEN completed. ${NC}"

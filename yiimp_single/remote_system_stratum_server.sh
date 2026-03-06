@@ -32,43 +32,37 @@ function print_error {
 trap print_error ERR
 
 term_art
-echo
-echo -e "$YELLOW System Configuration Started!${NC}"
-echo
+print_header "Remote Stratum System Configuration"
 
 # Set timezone to UTC
-echo
-echo -e "$YELLOW =>  Setting TimeZone to:$GREEN UTC <= ${NC}"
+print_status "Setting timezone to UTC..."
 if [ ! -f /etc/timezone ]; then
-    echo "Setting timezone to UTC."
     sudo bash -c 'echo "Etc/UTC" > /etc/timezone'
     restart_service rsyslog
 fi
-echo
 
 hide_output sudo apt-get install -y software-properties-common build-essential
 
 # CertBot
-echo
 
 if [[ "$DISTRO" == "16" || "$DISTRO" == "18" ]]; then
-    echo -e "$MAGENTA => Installing CertBot PPA <= ${NC}"
+    print_status "Installing CertBot (PPA)..."
     hide_output sudo add-apt-repository -y ppa:certbot/certbot
     hide_output sudo apt-get update
-    echo -e "$GREEN => Complete${NC}"
+    print_success "CertBot installed."
 elif [[ "$DISTRO" == "20" || "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" ]]; then
-    echo -e "$MAGENTA => Installing CertBot PPA <= ${NC}"
+    print_status "Installing CertBot (snap)..."
     hide_output sudo apt install -y snapd
     hide_output sudo snap install core
     hide_output sudo snap refresh core
     hide_output sudo snap install --classic certbot
     sudo ln -s /snap/bin/certbot /usr/bin/certbot
-    echo -e "$GREEN => Complete${NC}"
+    print_success "CertBot installed."
 
 elif [[ "$DISTRO" == "12" || "$DISTRO" == "11" ]]; then
-    echo -e "$MAGENTA => Installing CertBot PPA <= ${NC}"
+    print_status "Installing CertBot..."
     hide_output sudo apt install -y certbot
-    echo -e "$GREEN => Complete${NC}"
+    print_success "CertBot installed."
 fi
 
 #if [[ "$DISTRO" == "20" || "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" ]]; then
@@ -79,8 +73,7 @@ fi
 #    echo -e "$GREEN Completed${NC}"
 #fi
 
-echo
-echo -e "$MAGENTA Installing MariaDB..${NC}"
+print_status "Installing MariaDB..."
 hide_output sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
 
 case "$DISTRO" in
@@ -109,11 +102,11 @@ case "$DISTRO" in
         sudo add-apt-repository -y 'deb [arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/10.6/debian bullseye main' >/dev/null 2>&1
         ;;
     *)
-        echo "Unsupported Ubuntu version: $DISTRO"
+        echo "Unsupported distro version: $DISTRO"
         exit 1
         ;;
 esac
-echo -e "$GREEN Complete...${NC}"
+print_success "MariaDB repository configured."
 hide_output sudo apt-get update
 
 if [ ! -f /boot/grub/menu.lst ]; then
@@ -127,75 +120,60 @@ fi
 apt_get_quiet dist-upgrade
 apt_get_quiet autoremove
 
-echo
-echo -e "$MAGENTA => Installing Base system packages <= ${NC}"
+print_status "Installing base system packages..."
 apt_install python3 python3-dev python3-pip \
     wget curl git sudo coreutils bc \
     haveged pollinate unzip \
     unattended-upgrades cron ntp fail2ban screen rsyslog lolcat nginx
+print_success "Base system packages installed."
 
-echo -e "$GREEN => Complete${NC}"
-echo
-echo -e "$YELLOW => Initializing system random number generator <= ${NC}"
+print_status "Initializing system random number generator..."
 hide_output dd if=/dev/random of=/dev/urandom bs=1 count=32 2>/dev/null
 hide_output sudo pollinate -q -r
-echo -e "$GREEN => Complete${NC}"
+print_success "Random number generator initialized."
 
-echo
-echo -e "$YELLOW => Initializing UFW Firewall <= ${NC}"
+print_status "Initializing UFW Firewall..."
 set +eu +o pipefail
 if [ -z "${DISABLE_FIREWALL:-}" ]; then
     hide_output sudo apt-get install -y ufw
-    echo
-    echo -e "$YELLOW => Allow incoming connections to SSH <= ${NC}"
-    echo
+    print_status "Allowing incoming connections to SSH, HTTP, and HTTPS..."
     ufw_allow ssh
     sleep 0.5
-    echo -e "$YELLOW ssh port:$GREEN OPEN ${NC}"
-    echo
+    print_success "SSH port: OPEN"
     sleep 0.5
     ufw_allow http
-    echo -e "$YELLOW http port:$GREEN OPEN ${NC}"
-    echo
+    print_success "HTTP port: OPEN"
     sleep 0.5
     ufw_allow https
-    echo -e "$YELLOW https port:$GREEN OPEN ${NC}"
-    echo
+    print_success "HTTPS port: OPEN"
 
     SSH_PORT=$(sshd -T 2>/dev/null | grep "^port " | sed "s/port //")
     if [ ! -z "$SSH_PORT" ] && [ "$SSH_PORT" != "22" ]; then
-        echo -e "$YELLOW => Allow incoming connections to SSH <= ${NC}"
-        echo
-        echo -e "$YELLOW Opening alternate SSH port:$GREEN $SSH_PORT ${NC}"
-        echo
+        print_status "Opening alternate SSH port: $SSH_PORT"
         ufw_allow $SSH_PORT
         sleep 0.5
-        echo
-        echo -e "$YELLOW http port:$GREEN OPEN ${NC}"
+        print_success "Alternate SSH port $SSH_PORT: OPEN"
         ufw_allow http
         sleep 0.5
-        echo
-        echo -e "$YELLOW https port:$GREEN OPEN ${NC}"
         ufw_allow https
         sleep 0.5
-        echo
     fi
 
     hide_output sudo ufw --force enable
+    print_success "UFW Firewall enabled."
 fi
 set -eu -o pipefail
-echo
-echo -e "$MAGENTA => Installing YiiMP Required system packages <= ${NC}"
+
+print_status "Installing YiiMP required system packages..."
 if [ -f /usr/sbin/apache2 ]; then
-    echo Removing apache...
+    print_status "Removing Apache..."
     hide_output sudo apt-get -y purge apache2 apache2-*
     hide_output sudo apt-get -y --purge autoremove
 fi
 
 hide_output sudo apt-get update
 
-echo
-echo -e "$CYAN => Installing PHP <= ${NC}"
+print_status "Installing PHP 8.1..."
 sleep 3
 
 if [[ "$DISTRO" == "12" ]]; then
@@ -278,15 +256,19 @@ if [[ ("$DISTRO" == "20" ) || "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO
     sudo systemctl status php8.1-fpm | sed -n "1,3p"
 fi
 
-echo -e "$CYAN => Fixing DB connection issue... ${NC}"
+print_status "Setting PHP 8.1 as the system default..."
 sudo update-alternatives --set php /usr/bin/php8.1
+print_success "PHP 8.1 set as default."
 
-echo
-echo -e "$CYAN => Cloning Yiimp Repo <= ${NC}"
+print_status "Cloning YiiMP repository..."
 hide_output sudo git clone ${YiiMPRepo} $STORAGE_ROOT/yiimp/yiimp_setup/yiimp
+print_success "YiiMP repository cloned."
 
+print_status "Restarting nginx..."
 hide_output sudo service nginx restart
 sleep 0.5
+
+print_success "Remote stratum system configuration complete."
 
 set +eu +o pipefail
 exit 0

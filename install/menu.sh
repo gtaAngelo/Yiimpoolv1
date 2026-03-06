@@ -4,7 +4,7 @@
 # YiimPool Menu Script
 #
 # Author: Afiniel
-# Updated: 2023-03-16
+# Updated: 2026-03-06
 #
 
 # Load configuration and functions
@@ -14,16 +14,16 @@ source /etc/functions.sh
 
 display_version_info
 
-RESULT=$(dialog --stdout --nocancel --default-item 1 --title "YiimPool Menu $VERSION" --menu "Choose an option" -1 55 6 \
-    ' ' "- Install Yiimp -" \
-    1 "Install Yiimp Single Server" \
-    2 "Options" \
+RESULT=$(dialog --stdout --nocancel --default-item 1 --title "YiimPool Menu $VERSION" --menu "Choose an option" -1 60 6 \
+    ' ' "═══════════  YiimPool Installer ═══════════" \
+    1 "Install YiiMP Single Server" \
+    2 "Manage & Upgrade Options" \
     3 "Exit")
 
 case "$RESULT" in
     1)
         clear
-        echo "Preparing to install Yiimp Single Server..."
+        echo "Preparing to install YiiMP Single Server..."
         cd $HOME/Yiimpoolv1/yiimp_single
         source start.sh
         ;;

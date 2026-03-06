@@ -5,20 +5,21 @@
 #
 # Author: Afiniel
 #
-# Updated: 2025-01-30
+# Updated: 2026-03-06
 #
 
 source /etc/yiimpooldonate.conf
 source /etc/functions.sh
+source /etc/yiimpoolversion.conf
 
 # Ensure TERM is set for dialog commands
 export TERM=${TERM:-xterm}
 export NCURSES_NO_UTF8_ACS=1
 
-RESULT=$(dialog --stdout --default-item 1 --title "Yiimpool YiiMP Installer $VERSION" --menu "Choose an option" -1 55 3 \
-    ' ' "- Do you want to install YiiMP with WireGuard? -" \
-    1 "Yes" \
-    2 "No" \
+RESULT=$(dialog --stdout --default-item 1 --title "YiimPool YiiMP Installer $VERSION" --menu "Choose an option" -1 60 5 \
+    ' ' "═══  Install YiiMP with WireGuard VPN?  ═══" \
+    1 "Yes - Install with WireGuard (Multi-Server)" \
+    2 "No  - Install without WireGuard (Single-Server)" \
     3 "Exit" 2>/dev/tty)
 DIALOG_EXIT=$?
 

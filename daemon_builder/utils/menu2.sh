@@ -5,7 +5,7 @@
 #
 # Author: Afiniel
 #
-# Updated: 2025-01-29
+# Updated: 2026-03-06
 #
 
 source /etc/daemonbuilder.sh
@@ -13,15 +13,17 @@ source $STORAGE_ROOT/daemon_builder/conf/info.sh
 
 cd "$STORAGE_ROOT/daemon_builder"
 
-RESULT=$(dialog --stdout --title "DaemonBuilder $VERSION" --menu "Choose an option" 16 60 9 \
+RESULT=$(dialog --stdout --title "DaemonBuilder $VERSION" --menu "Choose an option" 18 60 9 \
+    ' ' "- Update coin with Berkeley autogen file -" \
     1 "Berkeley 4.8" \
     2 "Berkeley 5.1" \
     3 "Berkeley 5.3" \
     4 "Berkeley 6.2" \
-    5 "Makefile.unix" \
-    6 "CMake file & DEPENDS folder" \
-    7 "UTIL folder contains BULD.sh" \
-    8 "Precompiled coin. NEED TO BE LINUX Version!" \
+    ' ' "- Other choices -" \
+    5 "Update coin with makefile.unix file" \
+    6 "Update coin with CMake file & DEPENDS folder" \
+    7 "Update coin with UTIL folder contains BUILD.sh" \
+    8 "Update precompiled coin. NEED TO BE LINUX Version!" \
     9 "Exit DaemonBuilder")
 
 case "$RESULT" in
@@ -97,7 +99,10 @@ case "$RESULT" in
 
     9)
         clear;
-        echo "You have chosen to exit the Daemon Builder. Type: daemonbuilder anytime to start the menu again.";
+        echo -e "$CYAN ------------------------------------------------------------------------------- $NC"
+        echo -e "$YELLOW You have chosen to exit the Daemon Builder.$NC"
+        echo -e "$YELLOW Type: $BLUE daemonbuilder $YELLOW anytime to start the menu again.$NC"
+        echo -e "$CYAN ------------------------------------------------------------------------------- $NC"
         exit;
         ;;
 esac

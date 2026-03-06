@@ -24,26 +24,26 @@ fi
 
 # Display installation type based on wireguard setting
 if [[ ("$wireguard" == "true") ]]; then
-    message_box "Yiimpool YiiMP Installer" \
-    "You have chosen to install YiiMP with WireGuard!
-    
+    message_box "YiimPool YiiMP Installer" \
+    "You have chosen to install YiiMP with WireGuard VPN!
+
     This option will install all components of YiiMP on a single server along with WireGuard so you can easily add additional servers in the future.
-    
-    Please make sure any domain name or subdomain names are pointed to this server's IP address before running this installer.
-    
+
+    Please make sure your domain name or subdomains are pointed to this server's IP address before running this installer.
+
     After answering the following questions, setup will be automated.
-    
+
     NOTE: It is recommended to have at least 8 GB of RAM for optimal performance."
 else
-    message_box "Yiimpool YiiMP Installer" \
+    message_box "YiimPool YiiMP Installer" \
     "You have chosen to install YiiMP without WireGuard!
-    
+
     This option will install all components of YiiMP on a single server.
-    
-    Please make sure any domain name or subdomain names are pointed to this server's IP address before running this installer.
-    
+
+    Please make sure your domain name or subdomains are pointed to this server's IP address before running this installer.
+
     After answering the following questions, setup will be automated.
-    
+
     NOTE: It is recommended to have at least 8 GB of RAM for optimal performance."
 fi
 
@@ -68,8 +68,8 @@ esac
 # If using a domain, further prompts for subdomain and domain name
 if [[ "$UsingDomain" == "yes" ]]; then
     set +e
-    dialog --title "Using Sub-Domain" \
-    --yesno "Are you using a sub-domain for the main website domain? Example: pool.example.com
+    dialog --title "Using Subdomain" \
+    --yesno "Are you using a subdomain for the main website? Example: pool.example.com
 
 Make sure the DNS is updated and pointing to this server's IP address!" 8 60 2>/dev/tty
     response=$?
@@ -213,11 +213,11 @@ if [ -z "${PublicIP:-}" ]; then
     fi
 
     input_box "Your Public IP" \
-    "Enter your public IP address from the remote system you will access your admin panel from.
+    "Enter the public IP address of the computer you will use to access the admin panel.
 
-We have guessed your public IP from the IP address used to access this system.
+We have guessed your public IP from the IP address used to connect to this system.
 
-If you are unsure, you can check your public IP using online services or your router's status page.
+If you are unsure, check your public IP using an online service or your router's status page.
 
 Your Public IP:" \
     "${DEFAULT_PublicIP}" \
@@ -256,11 +256,11 @@ generate_random_password_yiimp_admin() {
     if [ -z "${!variable_name:-}" ]; then
         local default_password=$(openssl rand -base64 29 | tr -d "=+/")
         input_box "Admin Password" \
-        "Enter your desired admin password for YiiMP panel.
+        "Enter your desired admin password for the YiiMP panel.
 
 You may use the system-generated password shown below.
 
-This will be used to log in to your admin panel.
+This will be used to log in to the admin panel.
 
 Desired Admin Password:" \
         "${default_password}" \
@@ -283,7 +283,7 @@ generate_random_password_blocknotify() {
 
 You may use the system-generated password shown below.
 
-This will be used for coin blocknotify.
+This password is used for block notification between the pool and coin daemons.
 
 Desired Blocknotify Password:" \
         "${default_password}" \
@@ -302,9 +302,9 @@ generate_yiimp_admin_user() {
     if [ -z "${!variable_name:-}" ]; then
         local default_username="admin"
         input_box "Admin Username" \
-        "Enter your desired admin username for YiiMP panel.
+        "Enter your desired admin username for the YiiMP panel.
 
-This will be used to log in to your admin panel.
+This will be used to log in to the admin panel.
 
 Default username is 'admin'.
 

@@ -1,7 +1,18 @@
-#####################################################
-# Code from https://www.exratione.com/2014/08/bash-script-ssh-automation-without-a-password-prompt/
-# Updated by Afiniel for crypto use...
-#####################################################
+#!/bin/env bash
+
+##########################################
+# Created by Afiniel for Yiimpool use
+#
+# Deploys and executes the stratum setup
+# scripts on the remote stratum server
+# via SSH using setsid and SSH_ASKPASS.
+#
+# Author: Afiniel
+# Date: 2026-03-06
+#
+# Code reference:
+# https://www.exratione.com/2014/08/bash-script-ssh-automation-without-a-password-prompt/
+##########################################
 
 #----------------------------------------------------------------------
 # Set up values.
@@ -12,25 +23,12 @@ source /etc/functions.sh
 source /etc/yiimpool.conf
 source $STORAGE_ROOT/yiimp/.yiimp.conf
 
-# Debugging output
-echo "Config - NewStratumUser: ${NewStratumUser}"
-echo "Config - NewStratumPass: ${NewStratumPass}"
-echo "Config - NewStratumInternalIP: ${NewStratumInternalIP}"
-
 # User credentials for the remote server.
 StratumUser="${NewStratumUser}"
 StratumPass="${NewStratumPass}"
 StratumServer="${NewStratumInternalIP}"
 
-echo "Setting var.."
-
-# echo
-echo "StratumUser: ${StratumUser}"
-echo "StratumPass: ${StratumPass}"
-echo "StratumServer: ${NewStratumInternalIP}"
-
-
-# The script to run on the remote server.
+# The scripts to run on the remote server.
 script_create_user=$HOME/Yiimpoolv1/yiimp_single/create_user_remote.sh
 script_system_stratum=$HOME/Yiimpoolv1/yiimp_single/remote_system_stratum_server.sh
 script_stratum=$HOME/Yiimpoolv1/yiimp_single/remote_stratum.sh
@@ -38,20 +36,16 @@ script_motd_web=$HOME/Yiimpoolv1/yiimp_single/motd.sh
 script_harden_web=$HOME/Yiimpoolv1/yiimp_single/server_harden.sh
 script_ssh=$HOME/Yiimpoolv1/yiimp_single/ssh.sh
 
-
-# Additional files that need to be copied to the remote server
+# Additional files to copy to the remote server.
 functioncopy=$HOME/Yiimpoolv1/install/functions.sh
 conf=${STORAGE_ROOT}/yiimp/.newconf.conf
-yiimpoolversionconf=/etc/yiimpoolversion.conf
 
 screens=$HOME/Yiimpoolv1/yiimp_single/ubuntu/screens
-# addport=${dir}'/Yiimpoolv1/daemon_builder/utils/addport_stratum_server.sh'
-# addport_multi=${dir}'/Yiimpoolv1/daemon_builder/utils/addport.sh'
 header=$HOME/Yiimpoolv1/yiimp_single/ubuntu/etc/update-motd.d/00-header
 sysinfo=$HOME/Yiimpoolv1/yiimp_single/ubuntu/etc/update-motd.d/10-sysinfo
 footer=$HOME/Yiimpoolv1/yiimp_single/ubuntu/etc/update-motd.d/90-footer
 
-# Desired location of the script on the remote server.
+# Desired locations of the scripts on the remote server.
 remote_create_user_path='/tmp/create_user_remote.sh'
 remote_system_stratum_path='/tmp/remote_system_stratum_server.sh'
 remote_stratum_path='/tmp/remote_stratum.sh'
@@ -83,17 +77,16 @@ export DISPLAY=:0
 export SSH_ASKPASS=${SSH_ASKPASS_SCRIPT}
 
 # LogLevel error is to suppress the hosts warning. The others are
-# necessary if working with development servers with self-signed
-# certificates.
+# necessary if working with development servers with self-signed certificates.
 SSH_OPTIONS="-oLogLevel=error"
 SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
 SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 
 #----------------------------------------------------------------------
-# Run the script on the remote server.
+# Run the scripts on the remote server.
 #----------------------------------------------------------------------
 
-# Load in a base 64 encoded version of the script.
+# Load base64-encoded versions of each script.
 B64_user=`base64 --wrap=0 ${script_create_user}`
 B64_system=`base64 --wrap=0 ${script_system_stratum}`
 B64_stratum=`base64 --wrap=0 ${script_stratum}`
@@ -101,10 +94,7 @@ B64_motd=`base64 --wrap=0 ${script_motd_web}`
 B64_harden=`base64 --wrap=0 ${script_harden_web}`
 B64_ssh=`base64 --wrap=0 ${script_ssh}`
 
-# The command that will run remotely. This unpacks the
-# base64-encoded script, makes it executable, and then
-# executes it as a background task.
-
+# Build remote commands: decode base64, make executable, then execute.
 system_user="base64 -d - > ${remote_create_user_path} <<< ${B64_user};"
 system_user="${system_user} chmod u+x ${remote_create_user_path};"
 system_user="${system_user} sh -c 'nohup ${remote_create_user_path}'"
@@ -129,20 +119,33 @@ ssh="base64 -d - > ${remote_ssh_path} <<< ${B64_ssh};"
 ssh="${ssh} chmod u+x ${remote_ssh_path};"
 ssh="${ssh} sh -c 'nohup ${remote_ssh_path} > /dev/null 2>&1 &'"
 
-# Log in to the remote server and run the above command.
-
-# Copy needed files to remote server
+# Copy required files to the remote server.
+print_status "Copying configuration files to remote stratum server (${StratumServer})..."
 cat $functioncopy | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/functions.sh'
-cat $conf | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/.yiimp.conf'
-cat $screens | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/screens'
-cat $header | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/00-header'
-cat $sysinfo | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/10-sysinfo'
-cat $footer | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/90-footer'
+cat $conf        | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/.yiimp.conf'
+cat $screens     | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/screens'
+cat $header      | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/00-header'
+cat $sysinfo     | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/10-sysinfo'
+cat $footer      | setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} 'cat > /tmp/90-footer'
 
-# Execute scripts on remote server
+# Execute scripts on the remote server.
+print_status "Creating remote user..."
 setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} "${system_user}"
+
+print_status "Running remote system setup..."
 setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} "${system_stratum}"
+
+print_status "Building and installing stratum on remote server..."
 setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} "${stratum}"
+
+print_status "Configuring MOTD on remote server..."
 setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} "${motd_web}"
+
+print_status "Hardening remote server..."
 setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} "${harden_web}"
+
+print_status "Configuring SSH on remote server..."
 setsid ssh ${SSH_OPTIONS} ${StratumUser}@${StratumServer} "${ssh}"
+
+print_success "Remote stratum server deployment complete."
+print_info "Remote server: ${StratumServer}"

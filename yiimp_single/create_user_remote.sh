@@ -9,7 +9,7 @@
 export TERM=xterm
 
 if [ -z "${TAG}" ]; then
-TAG=v2.5.1
+TAG=v2.6.3
 fi
 echo 'VERSION='"${TAG}"'' | sudo -E tee /etc/yiimpoolversion.conf >/dev/null 2>&1
 
@@ -40,11 +40,11 @@ echo -e "${GREEN}Installed necessary packages.${NC}\n"
 source /etc/yiimpoolversion.conf
 source /etc/functions.sh
 
-echo -e " Begin remote server creations, installer may look hung...$COL_RESET"
+echo -e "${YELLOW} Beginning remote server setup — this may take a while...${NC}"
 
 # Get logged in user name
 whoami=`whoami`
-echo -e " Modifying existing user $whoami for Yiimpoolv1 support."
+echo -e "${YELLOW} Modifying existing user $whoami for YiimPool support...${NC}"
 sudo usermod -aG sudo ${whoami}
 
 echo '# yiimp
@@ -74,16 +74,15 @@ if [[ -f /etc/lsb-release ]]; then
     elif [[ "${UBUNTU_DESCRIPTION}" == "16.04" ]]; then
         DISTRO=16
     else
-        echo "This script only supports Ubuntu 22.04 LTS, 24.04 LTS, or Debian 12."
+        echo "This script only supports Ubuntu 20.04, 22.04, 24.04 LTS, or Debian 12."
         exit 1
     fi
 else
-    
     DEBIAN_DESCRIPTION=$(cat /etc/debian_version | cut -d. -f1)
     if [[ "${DEBIAN_DESCRIPTION}" == "12" ]]; then
         DISTRO=12
     else
-        echo "This script only supports Ubuntu 22.04 LTS, 24.04 LTS, or Debian 12."
+        echo "This script only supports Ubuntu 20.04, 22.04, 24.04 LTS, or Debian 12."
         exit 1
     fi
 fi
@@ -95,19 +94,19 @@ TOTAL_PHYSICAL_MEM=$(head -n 1 /proc/meminfo | awk '{print $2}')
   if [ $TOTAL_PHYSICAL_MEM -lt 2000000 ]; then
     if [ ! -d /vagrant ]; then
       TOTAL_PHYSICAL_MEM=$(expr \( \( $TOTAL_PHYSICAL_MEM \* 1024 \) / 1000 \) / 1000)
-      echo "Your Crypto-Pool Server needs more memory (RAM) to function properly."
-      echo "Please provision a machine with at least 2 GB, 6 GB recommended."
+      echo "Your stratum server needs more memory (RAM) to function properly."
+      echo "Please provision a machine with at least 2 GB RAM (4 GB recommended)."
       echo "This machine has $TOTAL_PHYSICAL_MEM MB memory."
       exit
     fi
   fi
-if [ $TOTAL_PHYSICAL_MEM -lt 2000000 ]; then
-  echo "WARNING: Your Crypto-Pool Server has less than 4 GB of memory."
-  echo " It might run unreliably when under heavy load."
+if [ $TOTAL_PHYSICAL_MEM -lt 4000000 ]; then
+  echo "WARNING: Your stratum server has less than 4 GB of memory."
+  echo "It may run unreliably under heavy load. 4 GB or more is recommended."
 fi
 
 # Check swap
-echo -e " Checking if swap space is needed and if so creating...$COL_RESET"
+echo -e "${YELLOW} Checking if swap space is needed and creating if so...${NC}"
   SWAP_MOUNTED=$(cat /proc/swaps | tail -n+2)
   SWAP_IN_FSTAB=$(grep "swap" /etc/fstab)
   ROOT_IS_BTRFS=$(grep "\/ .*btrfs" /proc/mounts)
@@ -145,7 +144,7 @@ ARCHITECTURE=$(uname -m)
     fi
 fi
 
-echo -e "$YELLOW => Setting our global variables <= ${NC}"
+echo -e "${YELLOW} Setting global variables...${NC}"
 
 # If the machine is behind a NAT, inside a VM, etc., it may not know
 # its IP address on the public network / the Internet. Ask the Internet

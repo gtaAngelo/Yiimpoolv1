@@ -2,19 +2,20 @@
 #####################################################
 # Updated by Afiniel
 # Menu: Update new Stratum
+# Updated: 2026-03-06
 #####################################################
 
 source /etc/daemonbuilder.sh
 source $STORAGE_ROOT/daemon_builder/conf/info.sh
 
-message_box " Stratum compiler " \
-"This Scrypt of Stratum run in future builds sorry
-\n\nCheck again later in Update this scrypt Menu"
+message_box " Stratum Compiler " \
+"The Stratum compiler script is not yet available in this build.
+\n\nCheck back later for updates."
 
 cd ~
 clear
 
-echo -e "$CYAN --------------------------------------------------------------------------- 	${NC}"
-echo -e "$RED    Type ${daemonname} at anytime to run this Scrypt!			 				${NC}"
-echo -e "$CYAN --------------------------------------------------------------------------- 	${NC}"
+echo -e "$CYAN --------------------------------------------------------------------------- ${NC}"
+echo -e "$YELLOW    Type: $BLUE daemonbuilder $YELLOW anytime to return to the menu. ${NC}"
+echo -e "$CYAN --------------------------------------------------------------------------- ${NC}"
 exit

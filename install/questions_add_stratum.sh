@@ -24,13 +24,13 @@ if [ -z "${NewStratumInternalIP:-}" ]; then
 DEFAULT_NewStratumInternalIP='10.0.0.x'
 input_box "Stratum Server Private IP" \
 "Enter the private IP address of the Stratum Server, as given to you by your provider.
-\n\nIf you do not have one from your provider enter the IP you assigned with Wireguard.
+\n\nIf you do not have one from your provider enter the IP you assigned with WireGuard.
 \n\nPrivate IP address:" \
 $DEFAULT_NewStratumInternalIP \
 NewStratumInternalIP
 
 if [ -z "$NewStratumInternalIP" ]; then
-user hit ESC/cancel
+# user hit ESC/cancel
 exit
 fi
 fi
@@ -45,23 +45,23 @@ $DEFAULT_NewStratumUser \
 NewStratumUser
 
 if [ -z "$NewStratumUser" ]; then
-user hit ESC/cancel
+# user hit ESC/cancel
 exit
 fi
 fi
 
 if [ -z "${NewStratumPass:-}" ]; then
-DEFAULT_NewStratumPass='password'
+DEFAULT_NewStratumPass=$(openssl rand -base64 29 | tr -d "=+/")
 input_box "Stratum Server User Password" \
 "Enter the user password of the Stratum Server.
 \n\nThis is required for setup to complete.
-\n\nWhen pasting your password CTRL+V does NOT work, you must either SHIFT+RightMouseClick or SHIFT+INSERT!!
+\n\nWhen pasting your password CTRL+V does NOT work, you must use SHIFT+RightMouseClick or SHIFT+INSERT.
 \n\nStratum Server User Password:" \
 $DEFAULT_NewStratumPass \
 NewStratumPass
 
 if [ -z "$NewStratumPass" ]; then
-user hit ESC/cancel
+# user hit ESC/cancel
 exit
 fi
 fi
@@ -82,13 +82,13 @@ fi
 fi
 
 if [ -z "${blckntifypass:-}" ]; then
-DEFAULT_blckntifypass=blocknotifypassword
+DEFAULT_blckntifypass=""
 input_box "Blocknotify Password" \
 "Enter the existing blocknotify password from the first stratum server.
-\n\nTo get this log in to your first stratum server and type:
-\n\ncat /home/crypto-data/yiimp/site/stratum/config/a5a.conf
+\n\nTo retrieve it, log in to your first stratum server and run:
+\n\ncat $STORAGE_ROOT/yiimp/site/stratum/config/a5a.conf
 \n\nThe blocknotify password is the first password in the TCP section.
-\n\nRemember to shift + right click to paste!
+\n\nUse SHIFT+RightMouseClick or SHIFT+INSERT to paste.
 \n\nBlocknotify Password:" \
 $DEFAULT_blckntifypass \
 blckntifypass
@@ -99,15 +99,15 @@ exit
 fi
 fi
 
-#Generate random conf file name, random StratumDBUser and StratumDBPassword
-# To increase security we are now randonly generating the yiimpfrontend DB name, panel, and stratum user names. So each installation is more secure.
-# We do it here to save the variables in the global .yiimp.conf file
+# Generate random conf file name, random StratumDBUser and StratumDBPassword.
+# To increase security we randomly generate the stratum DB user and password for each installation.
+# We do it here to save the variables to the new stratum conf file.
 generate=$(openssl rand -base64 9 | tr -d "=+/")
 StratumDBUser=Stratum$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo '')
 StratumUserDBPassword=$(openssl rand -base64 29 | tr -d "=+/")
 
-# Save the global options in $STORAGE_ROOT/yiimp/.yiimp.conf so that standalone
-# tools know where to look for data.
+# Save stratum configuration to a randomly named conf file, then copy to .newconf.conf
+# so that subsequent scripts (add_stratum_db.sh, setsid_stratum_server.sh) can source it.
 echo 'STORAGE_USER='"${STORAGE_USER}"'
 STORAGE_ROOT='"${STORAGE_ROOT}"'
 

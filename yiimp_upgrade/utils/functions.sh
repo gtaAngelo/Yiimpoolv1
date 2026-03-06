@@ -6,7 +6,7 @@
 # This script contains utility functions for the upgrade process
 #
 # Author: Afiniel
-# Date: 2024-07-15
+# Date: 2026-03-06
 #####################################################
 
 YELLOW='\033[1;33m'
@@ -19,6 +19,22 @@ STRATUM_DIR="/home/crypto-data/yiimp/site/stratum"
 STRATUM_CONF="/home/crypto-data/yiimp/site/stratum/config"
 SITE_DIR="/home/crypto-data/yiimp/site"
 BACKUP_DIR="$HOME/yiimpool_backups"
+
+# Query the GitHub API and return the latest YiimPool release tag.
+# Returns the tag string on success, exits non-zero on failure.
+get_latest_release() {
+    local repo="Afiniel/Yiimpoolv1"
+    local latest
+    latest=$(curl -sL --max-time 10 \
+        "https://api.github.com/repos/${repo}/releases/latest" \
+        | jq -r '.tag_name' 2>/dev/null)
+
+    if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+        log_message "$RED" "Could not fetch latest release from GitHub. Check your internet connection."
+        return 1
+    fi
+    echo "$latest"
+}
 
 log_message() {
     local level=$1

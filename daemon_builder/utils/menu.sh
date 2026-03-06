@@ -5,7 +5,7 @@
 #
 # Author: Afiniel
 #
-# Updated: 2025-01-29
+# Updated: 2026-03-06
 #
 
 source /etc/daemonbuilder.sh
@@ -29,9 +29,11 @@ if [[ "${LATESTVER}" > "${VERSION}" && "${LATESTVER}" != "null" ]]; then
     fi
 fi
 
-RESULT=$(dialog --stdout --title "DaemonBuilder $VERSION" --menu "Choose an option" 20 60 4 \
+RESULT=$(dialog --stdout --title "DaemonBuilder $VERSION" --menu "Choose an option" 20 65 6 \
+    ' ' "═══════════  Daemon Builder ═══════════" \
     1 "Build Coin Daemon From Source Code" \
-    2 "Update Coin Daemon" \
+    2 "Update Coin Daemon From Source Code" \
+    ' ' "───────────────────────────────────────" \
     3 "Exit DaemonBuilder")
 
 case "$RESULT" in

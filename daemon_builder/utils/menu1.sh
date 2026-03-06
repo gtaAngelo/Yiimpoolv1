@@ -5,7 +5,7 @@
 #
 # Author: Afiniel
 #
-# Updated: 2024-01-03
+# Updated: 2026-03-06
 #
 
 source /etc/daemonbuilder.sh
@@ -20,9 +20,9 @@ RESULT=$(dialog --stdout --title "DaemonBuilder $VERSION" --menu "Choose an opti
     ' ' "- Other choices -" \
     5 "Install coin with makefile.unix file" \
     6 "Install coin with CMake file & DEPENDS folder" \
-    7 "Install coin with UTIL folder contains BULD.sh" \
+    7 "Install coin with UTIL folder contains BUILD.sh" \
     8 "Install precompiled coin. NEED TO BE LINUX Version!" \
-    9 exit)
+    9 "Exit DaemonBuilder")
 
 case "$RESULT" in
     1)
@@ -97,7 +97,10 @@ case "$RESULT" in
 
     9)
         clear;
-        echo "You have chosen to exit the Daemon Builder. Type: daemonbuilder anytime to start the menu again.";
+        echo -e "$CYAN ------------------------------------------------------------------------------- $NC"
+        echo -e "$YELLOW You have chosen to exit the Daemon Builder.$NC"
+        echo -e "$YELLOW Type: $BLUE daemonbuilder $YELLOW anytime to start the menu again.$NC"
+        echo -e "$CYAN ------------------------------------------------------------------------------- $NC"
         exit;
         ;;
 esac
