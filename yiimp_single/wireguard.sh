@@ -25,18 +25,8 @@ term_art
 print_header "WireGuard Installation"
 
 
-if [[ "$DISTRO" == "20" || "$DISTRO" == "22" || "$DISTRO" == "24" ]]; then
-    hide_output sudo add-apt-repository ppa:wireguard/wireguard -y
-    hide_output sudo apt-get update
-    
-    print_status "Installing WireGuard packages..."
-    hide_output sudo apt-get install wireguard-dkms wireguard-tools -y
-    print_success "WireGuard packages installed successfully"
-elif [[ "$DISTRO" == "11" || "$DISTRO" == "12" || "$DISTRO" == "13" ]]; then
-    print_status "Installing WireGuard for Debian..."
-    hide_output sudo apt-get install -y wireguard
-    print_success "WireGuard installed successfully"
-fi
+hide_output sudo apt-get update
+hide_output sudo apt-get install -y wireguard
 
 print_header "WireGuard Key Generation"
 print_status "Generating WireGuard keys..."
