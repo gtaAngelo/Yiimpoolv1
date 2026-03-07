@@ -78,28 +78,28 @@ fi
 REPO_LINE=""
 case "$DISTRO" in
     "20")  # Ubuntu 20.04
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=ppc64el,binary=s390x] https://mirror.mariadb.org/repo/11.8/ubuntu focal main"
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/11.8/ubuntu focal main"
         ;;
     "22")  # Ubuntu 22.04
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=ppc64el,binary=s390x] https://mirror.mariadb.org/repo/11.8/ubuntu jammy main"
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/11.8/ubuntu jammy main"
         ;;
     "23")  # Ubuntu 23.04
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=ppc64el,binary=s390x] https://mirror.mariadb.org/repo/11.8/ubuntu mantic main"
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/11.8/ubuntu mantic main"
         ;;
-    "24")  # Ubuntu 24.04 — arch= uses equals signs consistently (hyphens were a typo)
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=ppc64el,binary=s390x] https://mirror.mariadb.org/repo/11.8/ubuntu noble main"
+    "24")  # Ubuntu 24.04
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/11.8/ubuntu noble main"
         ;;
     "13")  # Debian 13
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=i386,binary=ppc64el] https://mirror.mariadb.org/repo/11.8/debian trixie main"
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,i386,ppc64el] https://mirror.mariadb.org/repo/11.8/debian trixie main"
         ;;
     "12")  # Debian 12
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=i386,binary=ppc64el] https://mirror.mariadb.org/repo/11.8/debian bookworm main"
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,i386,ppc64el] https://mirror.mariadb.org/repo/11.8/debian bookworm main"
         ;;
     "11")  # Debian 11
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=i386,binary=ppc64el] https://mirror.mariadb.org/repo/11.8/debian bullseye main"
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,i386,ppc64el] https://mirror.mariadb.org/repo/11.8/debian bullseye main"
         ;;
     "25")  # Ubuntu 25.04
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=i386,binary=ppc64el] https://mirror.mariadb.org/repo/11.8/ubuntu plucky main"
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/11.8/ubuntu plucky main"
         ;;
     *)
         print_error "Unsupported Ubuntu/Debian version: $DISTRO"
@@ -190,6 +190,20 @@ else
 fi
 
 hide_output sudo apt-get update
+
+# Verify php8.1 is actually in the cache — apt-get update exits 0 even when
+# individual PPA repos 404, so the file check above can pass for a stale/broken
+# PPA entry. Force a clean re-add if the package is still not visible.
+if ! apt-cache show php8.1 &>/dev/null; then
+    print_status "php8.1 not found in cache — re-adding PHP repository"
+    sudo add-apt-repository -y --remove ppa:ondrej/php 2>/dev/null || true
+    hide_output sudo add-apt-repository -y ppa:ondrej/php
+    hide_output sudo apt-get update
+    if ! apt-cache show php8.1 &>/dev/null; then
+        print_error "PHP 8.1 is still not available after re-adding the PPA. Cannot continue."
+        exit 1
+    fi
+fi
 
 print_status "Installing PHP packages..."
 
