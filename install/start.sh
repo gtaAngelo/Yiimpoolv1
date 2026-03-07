@@ -113,6 +113,8 @@ else
     echo -e "${GREEN}Configured NCURSES for correct line drawing characters.${NC}\n"
 
     echo -e "${YELLOW}Loading system functions and configuration...${NC}\n"
+    # Always refresh /etc/functions.sh so it stays in sync with the repo
+    sudo cp -f "$HOME/Yiimpoolv1/install/functions.sh" /etc/functions.sh
     source /etc/functions.sh
     source /etc/yiimpool.conf
     echo -e "${GREEN}Loaded system functions and configuration.${NC}\n"
