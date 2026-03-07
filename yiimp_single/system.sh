@@ -37,11 +37,7 @@ if [ "$(cat /etc/timezone 2>/dev/null)" != "UTC" ]; then
 fi
 print_success "Timezone set to UTC"
 
-apt_install software-properties-common build-essential
-
-if [[  "$DISTRO" == "11" || "$DISTRO" == "12" || "$DISTRO" == "13" ]]; then
-    apt_install gnupg2
-fi
+apt_install software-properties-common build-essential gnupg2
 
 # CertBot
 print_header "Installing CertBot"
@@ -115,10 +111,11 @@ hide_output sudo apt-get dist-upgrade -y
 hide_output sudo apt-get autoremove -y
 
 print_header "Installing Base System Packages"
-apt_install python3 python3-dev python3-pip \
-	wget curl git sudo coreutils bc \
-	haveged pollinate unzip \
-	unattended-upgrades cron ntp fail2ban screen rsyslog lolcat nginx haproxy supervisor
+
+apt_install python3 python3-dev python3-pip
+apt_install wget curl git sudo coreutils bc
+apt_install haveged pollinate unzip
+apt_install unattended-upgrades cron ntp fail2ban screen rsyslog lolcat nginx haproxy supervisor
 
 print_success "Base system packages installed"
 
