@@ -556,30 +556,49 @@ display_version_info() {
 BOLD='\033[1m'
 DIM='\033[2m'
 
+# ── Title ──────────────────────── (cyan bold, fills terminal width)
 print_header() {
-    echo -e "\n${BLUE}${BOLD}=== $1 ===${NC}\n"
+    local title="$1"
+    local width
+    width=$(tput cols 2>/dev/null || echo 60)
+    local prefix="── ${title} "
+    local remaining=$(( width - ${#prefix} ))
+    [ "$remaining" -lt 2 ] && remaining=2
+    local fill
+    fill=$(printf '%*s' "$remaining" '' | tr ' ' '─')
+    echo -e "\n\033[1;36m${prefix}${fill}${NC}\n"
 }
 
+#   →  message  (cyan arrow)
 print_status() {
-    echo -e "${DIM}[${NC}${GREEN}●${NC}${DIM}]${NC} $1"
+    echo -e "  \033[0;36m→${NC}  $1"
 }
 
-print_error() {
-    echo -e "${RED}${BOLD}ERROR:${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}${BOLD}WARNING:${NC} $1"
-}
-
+#   ✔  message  (green tick)
 print_success() {
-    echo -e "${GREEN}${BOLD}SUCCESS:${NC} $1"
+    echo -e "  ${GREEN}✔${NC}  $1"
 }
 
+#   ✖  message  (red bold)
+print_error() {
+    echo -e "  ${RED}${BOLD}✖${NC}  ${BOLD}$1${NC}"
+}
+
+#   ⚠  message  (yellow)
+print_warning() {
+    echo -e "  ${YELLOW}⚠${NC}  $1"
+}
+
+#   ·  message  (dim)
 print_info() {
-    echo -e "${BLUE}${BOLD}INFO:${NC} $1"
+    echo -e "  ${DIM}·${NC}  $1"
 }
 
+# full-width thin divider line (dim)
 print_divider() {
-    echo -e "\n${DIM}────────────────────────────────────────────────────────${NC}\n"
+    local width
+    width=$(tput cols 2>/dev/null || echo 60)
+    local fill
+    fill=$(printf '%*s' "$width" '' | tr ' ' '─')
+    echo -e "\n${DIM}${fill}${NC}\n"
 }
