@@ -4,7 +4,7 @@ All notable changes to YiimPool are documented here.
 
 ---
 
-## [v2.6.3] — 2026-03-06
+## [v2.6.3] — 2026-03-07
 
 ### Bug Fixes
 
@@ -46,6 +46,61 @@ All notable changes to YiimPool are documented here.
 
 - **`yiimp_single/questions.sh`** — Fixed "Yiimpool" → "YiimPool" in message box titles. Changed "subdomain names" → "subdomains". Fixed "Using Sub-Domain" → "Using Subdomain". Fixed duplicate word "from from" in Public IP input box. Changed "for YiiMP panel" → "for the YiiMP panel". Improved blocknotify password description to clearly explain its purpose. Cleaned up trailing spaces on blank continuation lines.
 - **`install/questions_add_stratum.sh`** — See Add New Stratum Server section above.
+
+#### Daemon Builder — `source.sh` Overhaul
+
+- **`daemon_builder/utils/source.sh`** — Replaced all uses of the deprecated `tempfile` command (removed in debianutils 4.9 / Ubuntu 22.04+) with `mktemp`. Affected the algorithm-selection dialog, which would silently fail on modern systems.
+- **`daemon_builder/utils/source.sh`** — Added `PIPESTATUS` checks after every critical piped compile step: `./autogen.sh | ./configure` (step 5.3), `make` via `makefile.unix` (step 6.2), four separate CMake build steps, and the `makefile.unix` fallback. Previously a failed compile would not stop the build.
+- **`daemon_builder/utils/source.sh`** — Removed a dead duplicate summary block that printed stale, hardcoded values instead of the real build results.
+- **`daemon_builder/utils/source.sh`** — Fixed `print_divider` called without required argument, causing a blank/broken divider line in output.
+- **`daemon_builder/utils/source.sh`** — Fixed stray unquoted `$` character that caused a syntax warning.
+- **`daemon_builder/utils/source.sh`** — Fixed wrong step labels that displayed out-of-order step numbers in status output.
+- **`daemon_builder/utils/source.sh`** — Fixed `COINUTILFIND` typo (was `COINUTILFND`) and removed a duplicate assignment of the same variable.
+- **`daemon_builder/utils/source.sh`** — Added `@reboot` crontab entry for the coin daemon inside the `YIIMPCONF == "true"` block. Previously the daemon was started once at end of script but never registered to restart on reboot. Entry includes a 30-second boot delay, deduplication of existing entries, and redirects output to `/var/log/<coin>-daemon-boot.log`.
+- **`daemon_builder/utils/source.sh`** — Updated the final summary section to display autostart status and boot log path when stratum was configured.
+
+#### Daemon Builder — Stratum Autostart Fixes
+
+- **`daemon_builder/utils/addport.sh`** — Replaced deprecated `tempfile` with `mktemp` in the algorithm-selection dialog.
+- **`daemon_builder/utils/addport.sh`** — Fixed the `@reboot` crontab entry: added deduplication (`grep -v` before inserting), changed from bare `bash stratum.X` to full path `/usr/bin/stratum.X`, increased boot delay from 10 s to 30 s, and redirected output to `/var/log/stratum-<coin>-boot.log`. Without a full path, `@reboot` entries silently fail because `PATH` is not set at boot time.
+- **`daemon_builder/utils/addport.sh`** — Fixed immediate stratum launch at end of script: changed bare `bash stratum.X` to `/usr/bin/stratum.X` for consistency.
+- **`daemon_builder/utils/addport_stratum_server.sh`** — Applied identical `tempfile → mktemp`, crontab, and stratum launch path fixes as `addport.sh`. Fixed two separate occurrences of the bare `bash stratum.` call (local branch and remote-server branch).
+
+#### `install/create_user.sh` — SSH Key Login Overhaul
+
+- **Bug fix** — `chmod 644` on `authorized_keys` changed to `chmod 600`. OpenSSH's `StrictModes yes` (the default) refuses to use key files with group/world read permission, causing every key-based login attempt to fall through to password prompting.
+- **Bug fix** — Operation order corrected: `authorized_keys` is now written first, then `chown`/`chmod` applied to the final content. Previously permissions were set before the key was written, creating a race window.
+- **Bug fix** — Added `chmod 755 /home/${yiimpadmin}` before `.ssh` creation. `StrictModes` also rejects group/world-writable home directories.
+- **Bug fix** — Added full `sshd_config` configuration for key-only authentication. The root cause of "still prompts for password after reboot": sshd was never told to disable `KbdInteractiveAuthentication` or `PasswordAuthentication`. On modern systems (Ubuntu 20.04+), a drop-in file `/etc/ssh/sshd_config.d/10-yiimpool.conf` is written with `PubkeyAuthentication yes`, `KbdInteractiveAuthentication no`, `ChallengeResponseAuthentication no`, and `PasswordAuthentication no`. The cloud-init override file `50-cloud-init.conf` is patched if present to prevent it overriding `PasswordAuthentication`.
+- **Bug fix** — Added `_sshd_set` helper function for older systems (no `sshd_config.d`). The previous four bare `sed -i 's/^#*DIRECTIVE.*/...'` calls silently did nothing when a directive was absent from `sshd_config` (e.g. Ubuntu 16.04/18.04 using compiled-in defaults). `_sshd_set` checks with `grep -qE` first and appends the directive via `tee -a` if not found.
+- **Bug fix** — Added `systemctl restart ssh` (with fallbacks to `sshd` and `service ssh`) so the new sshd config takes effect without a reboot. Previously the settings were never applied until the next system restart.
+- **Bug fix** — Removed dead broken `passwd` call in the SSH key path. `$RootPassword` was never set (the `openssl rand` line was commented out), so two empty strings were piped to `passwd`, potentially setting a blank password. The account correctly uses `--disabled-password` for SSH key-only login.
+- **Bug fix** — Fixed `sudo rm -r $HOME/yiimpool` (wrong directory name) to `sudo rm -r "$HOME/Yiimpoolv1"`. The SSH path copied `~/Yiimpoolv1` to the new user's home then attempted to delete `~/yiimpool`, leaving the original root copy behind.
+- **Bug fix** — Fixed broken `passwd` quoting in the password path: `echo -e ""${RootPassword}"\n"${RootPassword}""` word-splits on passwords containing spaces. Replaced with `printf '%s\n%s\n' "${RootPassword}" "${RootPassword}" | passwd`.
+- **Bug fix** — Fixed `yiimpool.conf` being written with 4-space leading indentation on all lines (except the first) due to the heredoc being indented inside a `case` block. Replaced with an unindented `tee` heredoc producing a clean conf file.
+- **Improvement** — `yiimpool` command script now includes a proper `#!/usr/bin/env bash` shebang and is written without spurious leading whitespace.
+- **Improvement** — Sudoers entry rewritten with `printf` — removes leading-space formatting artifacts from the previous heredoc-in-`echo` approach.
+- **Improvement** — SSH path setup summary now displays `PRIVATE_IP` (previously omitted; password path already showed it).
+- **Typo fixes** — `Creaete` → `Create`, `continu` → `continue` (×2), `Unfortunatley` → `Unfortunately`, `"your new  username"` double-space removed.
+- **Code quality** — All unquoted `${DEFAULT_*}` variables and path strings throughout the file now properly quoted. `bash $(basename $0)` → `bash "$(basename "$0")"`. Stray `$RED` before `$NC` with no text between them removed.
+
+#### `yiimp_upgrade/health_check.sh` — Overhaul
+
+- **Bug fix** — `check_cpu`: replaced fragile `top -bn1 | grep "Cpu(s)" | awk '{print $8}'` (field position not stable across distros/locales) with `awk -F',' '{... if($i ~ /id/) ...}'` which identifies the idle field by its label. Added a `/proc/stat` fallback if `top` parsing still fails.
+- **Bug fix** — `check_critical_services`: `php8.1-fpm` was hardcoded. Now dynamically detects the active PHP-FPM service via `systemctl list-units`; falls back to probing versions 8.3 → 7.4.
+- **Bug fix** — `check_critical_services`: was checking only `mysql` service. Now checks for `mariadb.service` first and falls back to `mysql`, matching whichever is installed.
+- **Bug fix** — `check_database`: `mysqladmin ping` with no credentials fails when `~/.my.cnf` is absent. Now uses `DB_USER`/`DB_PASS` from the sourced `.yiimp.conf` when available.
+- **Bug fix** — `check_database`: unguarded empty rows from the `while read db size` loop produced stray color output. Added `[ -z "$db" ] && continue` guard.
+- **Bug fix** — `check_ssl`: only checked `ssl_certificate.pem`. Now searches five candidate paths in priority order: `$STORAGE_ROOT/ssl/ssl_certificate.pem`, `$STORAGE_ROOT/ssl/fullchain.pem`, Let's Encrypt `fullchain.pem`, `cert.pem`, and `ssl_certificate.pem`.
+- **Bug fix** — `check_ssl`: negative `days_left` (already-expired certificate) fell into the `< 7` branch, printing "expires in -5 days". Added an explicit `< 0` branch: `"SSL Certificate EXPIRED N days ago"`.
+- **New** — `check_swap()`: reports swap total, used, and percent with color thresholds (red > 80 %, yellow > 50 %); prints an informational message if no swap is configured.
+- **New** — `check_load()`: reads `/proc/loadavg` and displays 1/5/15-minute load averages color-coded against the number of CPU cores; also shows uptime and core count.
+- **New** — `check_stratum()`: lists all active `screen` sessions (stratum processes) and their states; warns if none are found.
+- **New** — `check_critical_services` now also checks **cron** (`cron`/`crond` auto-detected), **supervisor** (yiimp workers), and **fail2ban` — each only if the service is installed.
+- **Improvement** — `main()` header upgraded to box-drawing style displaying version, hostname, and ISO-format timestamp.
+- **Improvement** — Database size query results sorted by size descending so the largest databases appear first.
+- **Improvement** — `free` local variable renamed to `free_mem` to avoid confusing name collision with the `free` command.
+- **Improvement** — Added `MAGENTA` color variable. All output lines consistently indented 2 spaces for cleaner terminal output.
 
 ### Version
 

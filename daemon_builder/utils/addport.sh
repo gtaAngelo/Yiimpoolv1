@@ -74,7 +74,7 @@ else
 	optionslistalgos=$(echo -e "${convertlistalgos}" | awk '{ printf "%s on\n", $1}' | sort | uniq | grep [[:alnum:]])
 
 	DIALOGFORLISTALGOS=${DIALOGFORLISTALGOS=dialog}
-	tempfile=`tempfile 2>/dev/null` || tempfile=/tmp/test$$
+	tempfile=$(mktemp)
 	trap "rm -f $tempfile" 0 1 2 5 15
 
 	$DIALOGFORLISTALGOS --colors --title "\Zb\Zr\Z7| Select the algorithm for coin: \Zn\ZR\ZB\Z0${coinsymbol^^}\Zn\Zb\Zr\Z7 |" --clear --colors --no-items --nocancel --shadow \
@@ -228,11 +228,14 @@ sudo cp -r $STORAGE_ROOT/yiimp/site/stratum/config/stratum.${coinsymbollower} /u
 sudo ufw allow $coinport
 
 echo
-echo "Adding stratum.${coinsymbollower} to crontab for autostart at system boot."
-(crontab -l 2>/dev/null; echo "@reboot sleep 10 && bash stratum.${coinsymbollower} start ${coinsymbollower}") | crontab -
+echo "Registering stratum.${coinsymbollower} for autostart at system boot..."
+# Remove any existing @reboot entry for this coin's stratum (deduplication)
+(crontab -l 2>/dev/null | grep -v "stratum\.${coinsymbollower} start") | crontab - 2>/dev/null || true
+# Add fresh @reboot entry with full path, 30s delay, and boot log
+(crontab -l 2>/dev/null; echo "@reboot sleep 30 && /usr/bin/stratum.${coinsymbollower} start ${coinsymbollower} >> /var/log/stratum-${coinsymbollower}-boot.log 2>&1") | crontab -
 echo
 echo -e "$YELLOW Starting your new stratum...${NC}"
-bash stratum.${coinsymbollower} start ${coinsymbollower}
+/usr/bin/stratum.${coinsymbollower} start ${coinsymbollower}
 
 if [[ ("$CREATECOIN" == "true") ]]; then
 	echo '

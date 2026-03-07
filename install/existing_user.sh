@@ -53,7 +53,7 @@ echo 'BTCDON="bc1qc4qqz8eu5j7u8pxfrfvv8nmcka7whhm225a3f9"
 LTCDON="MC9xjhE7kmeBFMs4UmfAQyWuP99M49sCQp"
 ETHDON="0xdA929d4f03e1009Fc031210DDE03bC40ea66D044"
 BCHDON="qpse55j0kg0txz0zyx8nsrv3pvd039c09ypplsfn87"
-DOGEDON="DHNhm8FqNAQ1VTNwmCHAp3wfQ6PcfzN1nu"' | sudo -E tee /etc/yiimpooldonate.conf >/dev/null 2>&1
+DOGEDON="DKBddo8Qoh19PCFtopBkwTpcEU1aAqdM7S"' | sudo -E tee /etc/yiimpooldonate.conf >/dev/null 2>&1
 
 cd ~
 sudo setfacl -m u:${whoami}:rwx /home/${whoami}/Yiimpoolv1

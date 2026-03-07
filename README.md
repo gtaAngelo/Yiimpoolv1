@@ -26,6 +26,10 @@ YiimPool is a fully automated installer for the [YiiMP](https://github.com/Kudar
 - Built-in upgrade and database tools
 - Comprehensive screen management for service monitoring
 - phpMyAdmin for database management
+- **SSH key-only login** — full `sshd_config` hardening applied automatically at user creation (StrictModes-safe permissions, cloud-init override neutralization, immediate SSH restart)
+- **Coin daemon autostart** — each daemon compiled with DaemonBuilder is registered as a `@reboot` crontab entry with a 30-second boot delay and dedicated boot log
+- **Stratum autostart** — stratum processes registered via `@reboot` crontab with full path, deduplication, and boot log on every `addport` run
+- **System health check** — comprehensive monitoring covering disk, swap, memory, load, CPU, services (MariaDB/MySQL, PHP-FPM auto-detected), stratum sessions, database sizes, and SSL expiry
 
 ---
 
@@ -171,6 +175,34 @@ yiimp                     # Display pool overview
 motd                      # Display system and service status
 ```
 
+### System Health Check
+
+Run a full health report at any time:
+
+```bash
+bash ~/Yiimpoolv1/yiimp_upgrade/health_check.sh
+```
+
+Or from the management menu:
+
+```
+yiimpool → option 5 → System Health Check
+```
+
+The health check covers:
+
+| Check | Details |
+|-------|---------|
+| Disk space | Usage % with color warnings (yellow >75 %, red >90 %) |
+| Swap usage | Total / used / percent (yellow >50 %, red >80 %) |
+| Memory | Total, used, free, buff/cache, available |
+| Load average | 1 / 5 / 15-minute averages color-coded against CPU core count |
+| CPU usage | Current % with top-5 process list |
+| Critical services | nginx, MariaDB/MySQL (auto-detected), PHP-FPM (version auto-detected), cron, supervisor, fail2ban |
+| Stratum sessions | Lists all active `screen` sessions for running stratums |
+| Database sizes | Per-database MB usage sorted largest first |
+| SSL certificate | Expiry in days; explicit "EXPIRED" message if already past |
+
 ---
 
 ## DaemonBuilder
@@ -185,7 +217,17 @@ Features:
 - Automated build dependency handling
 - GCC version management for compatibility
 - Support for multiple compile options and configurations
-- Custom port configuration per coin
+- Custom port configuration per coin via `addport`
+- **Coin daemon autostart on reboot** — after a successful build, the daemon is automatically registered in crontab as:
+  ```
+  @reboot sleep 30 && <coind> -datadir=... -daemon ... >> /var/log/<coin>-daemon-boot.log 2>&1
+  ```
+  Existing entries for the same coin are deduplicated before the new one is added.
+- **Stratum autostart on reboot** — running `addport` registers the stratum process via:
+  ```
+  @reboot sleep 30 && /usr/bin/stratum.<coin> start <coin> >> /var/log/stratum-<coin>-boot.log 2>&1
+  ```
+  Both the crontab entry and the immediate launch use the full `/usr/bin/` path, ensuring they work correctly at boot time when `PATH` is not yet populated.
 
 ---
 
@@ -196,6 +238,47 @@ Features:
 - Server hardening is applied (SSH key enforcement, fail2ban, etc.)
 - Do not modify default file permissions under `/home/crypto-data/`
 - Back up your configuration files and database regularly
+
+### SSH Key Login Hardening
+
+When you choose SSH key login during user creation, the following hardening is applied automatically:
+
+| Setting | Value | Where |
+|---------|-------|--------|
+| Home directory permissions | `755` | Required by `StrictModes` |
+| `.ssh/` directory permissions | `700` | Required by `StrictModes` |
+| `authorized_keys` permissions | `600` | Required by `StrictModes` |
+| `PubkeyAuthentication` | `yes` | sshd config |
+| `KbdInteractiveAuthentication` | `no` | sshd config (prevents PAM password prompts) |
+| `ChallengeResponseAuthentication` | `no` | sshd config |
+| `PasswordAuthentication` | `no` | sshd config |
+
+On **Ubuntu 20.04+ / Debian 12** a drop-in file `/etc/ssh/sshd_config.d/10-yiimpool.conf` is written so the main config is never modified. Any `PasswordAuthentication yes` override left by cloud-init (`50-cloud-init.conf`) is patched automatically. On **older systems** a `_sshd_set` helper ensures each directive is added to `sshd_config` even if it was not present at all (not just commented out). The SSH service is restarted immediately so the new settings take effect without a reboot.
+
+---
+
+## What's New in v2.6.3
+
+### Bug Fixes
+- **SSH key login** — Fixed "still prompts for password after reboot" caused by missing `sshd_config` changes, wrong `authorized_keys` permissions (`644` → `600`), and no SSH service restart
+- **Coin daemon & stratum autostart** — Both were not registered for reboot persistence; `@reboot` crontab entries are now created automatically with deduplication and boot logging
+- **DaemonBuilder compile errors** — Added `PIPESTATUS` checks after every piped build step; failed compiles now abort correctly instead of silently continuing
+- **`addport` on Ubuntu 22.04+** — Fixed crash from deprecated `tempfile` command (removed from modern debianutils); replaced with `mktemp`
+- **Health check services** — Fixed hardcoded `php8.1-fpm` service name; PHP-FPM version is now detected dynamically. Fixed `mysql`-only check; MariaDB is detected automatically
+- **Health check SSL** — Fixed "expires in -5 days" message for already-expired certificates; added multi-path cert discovery for standard Let's Encrypt filenames
+- **Health check CPU** — Fixed fragile `top` field-position parsing that silently broke on some distros/locales; added `/proc/stat` fallback
+- **Remote stratum setup** — Fixed plaintext SSH credential logging and broken completion messages
+- **Add New Stratum Server** — Fixed menu option that showed "not yet available" despite a complete implementation existing
+
+### New Features
+- **`check_swap()`** — Swap monitoring added to health check
+- **`check_load()`** — System load average and uptime added to health check
+- **`check_stratum()`** — Active stratum screen session listing added to health check
+- **cron / supervisor / fail2ban** — Added to health check service monitoring
+- **SSH hardening table** — `create_user.sh` now fully configures `sshd` for key-only authentication including cloud-init override neutralization
+- **Multi-server stratum** — "Add New Stratum Server" menu option fully implemented
+
+See [`CHANGELOG.md`](CHANGELOG.md) for the complete list of changes.
 
 ---
 

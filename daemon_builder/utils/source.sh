@@ -71,7 +71,7 @@ convertlistalgos=$(find ${PATH_STRATUM}/config/ -mindepth 1 -maxdepth 1 -type f 
 optionslistalgos=$(echo -e "${convertlistalgos}" | awk '{ printf "%s on\n", $1}' | sort | uniq | grep [[:alnum:]])
 
 DIALOGFORLISTALGOS=${DIALOGFORLISTALGOS=dialog}
-tempfile=$(tempfile 2>/dev/null) || tempfile=/tmp/test$$
+tempfile=$(mktemp)
 trap "rm -f $tempfile" 0 1 2 5 15
 
 $DIALOGFORLISTALGOS --colors --title "\Zb\Zr\Z7| Select Algorithm: ${coin^^} |" --clear --colors --no-items --nocancel --shadow \
@@ -914,7 +914,6 @@ if [[ "$precompiled" == "true" ]]; then
     [[ -n "$COINHASHFIND" ]] && wallet_files_found["Hash"]=$(basename "$COINHASHFIND") || wallet_files_not_found["Hash"]="true"
     [[ -n "$COINWALLETFIND" ]] && wallet_files_found["Wallet"]=$(basename "$COINWALLETFIND") || wallet_files_not_found["Wallet"]="true"
     [[ -n "$COINQTFIND" ]] && wallet_files_found["QT"]=$(basename "$COINQTFIND") || wallet_files_not_found["QT"]="true"
-    [[ -n "$COINUTILFIND" ]] && wallet_files_found["Utils"]=$(basename "$COINUTILFIND") || wallet_files_not_found["Utils"]="true"
 
     echo -e "$GREEN === Found Wallet Files ===$NC"
     echo
@@ -1481,6 +1480,11 @@ if [[ -f "$ADDPORTCONF" ]]; then
     print_info "Port         : ${MAGENTA}${COINPORT}${NC}"
 fi
 
+if [[ "$YIIMPCONF" == "true" ]]; then
+    print_info "Daemon       : ${GREEN}Autostart enabled — cron @reboot (30s delay)${NC}"
+    print_info "Boot log     : ${YELLOW}/var/log/${coin,,}-daemon-boot.log${NC}"
+fi
+
 print_divider
 
 # Display stratum management commands
@@ -1489,6 +1493,10 @@ print_info "Start/Stop/Restart:"
 echo -e "  ${BLUE}stratum.${coin,,} start|stop|restart ${coin,,}${NC}"
 print_info "View Screen:"
 echo -e "  ${BLUE}screen -r ${coin,,}${NC}"
+if [[ -f "$ADDPORTCONF" ]]; then
+    print_info "Autostart    : ${GREEN}Enabled — cron @reboot (30s delay)${NC}"
+    print_info "Boot log     : ${YELLOW}/var/log/stratum-${coin,,}-boot.log${NC}"
+fi
 
 print_divider
 
@@ -1499,10 +1507,15 @@ print_status "Initializing ${coin^^} daemon..."
 if [[ "$YIIMPCONF" == "true" ]]; then
 
     "${coind}" -datadir=$STORAGE_ROOT/wallets/."${coind::-1}" -conf="${coind::-1}".conf -daemon -shrinkdebugfile
+    print_success "${coin^^} daemon started successfully"
+
+    # Register coin daemon for autostart on system boot (deduplicate existing entries)
+    print_status "Registering ${coin^^} daemon for autostart at system boot..."
+    (crontab -l 2>/dev/null | grep -v "${coind} -datadir") | crontab - 2>/dev/null || true
+    (crontab -l 2>/dev/null; echo "@reboot sleep 30 && ${coind} -datadir=${STORAGE_ROOT}/wallets/.${coind::-1} -conf=${coind::-1}.conf -daemon -shrinkdebugfile >> /var/log/${coin,,}-daemon-boot.log 2>&1") | crontab -
+    print_success "${coin^^} daemon registered for autostart at system boot"
 
 fi
-
-print_success "Daemon started successfully"
 
 print_divider
 

@@ -6,10 +6,9 @@
 # Updated by Afiniel for yiimpool use...                                         #
 ##################################################################################
 
-
 source /etc/yiimpoolversion.conf
 source /etc/functions.sh
-cd ~/Yiimpoolv1/install
+cd "$HOME/Yiimpoolv1/install"
 clear
 
 # Welcome
@@ -21,29 +20,32 @@ message_box "Yiimpool Installer $VERSION" \
 # Root warning message box
 message_box "Yiimpool Installer $VERSION" \
 "WARNING: You are about to run this script as root!
-\n\n The program will create a new user account with sudo privileges. 
+\n\nThe program will create a new user account with sudo privileges.
 \n\nThe next step, you will be asked to create a new user account, you can name it whatever you want."
 
 # Ask if SSH key or password user
 dialog --title "Create New User With SSH Key" \
---yesno "Do you want to create new user with SSH key login?
+    --yesno "Do you want to create new user with SSH key login?
 Selecting no will create user with password login only." 7 60
 response=$?
 case $response in
-0) UsingSSH=yes ;;
-1) UsingSSH=no ;;
-255) echo "[ESC] key pressed." ;;
+    0) UsingSSH=yes ;;
+    1) UsingSSH=no ;;
+    255) echo "[ESC] key pressed." ;;
 esac
 
-# If Using SSH Key Login
-if [[ ("$UsingSSH" == "yes") ]]; then
+##############################################################################
+# SSH Key Login Path
+##############################################################################
+if [[ "$UsingSSH" == "yes" ]]; then
     clear
+
     if [ -z "${yiimpadmin:-}" ]; then
         DEFAULT_yiimpadmin=yiimpadmin
         input_box "New username" \
-            "Please enter your new  username.
+            "Please enter your new username.
       \n\nUser Name:" \
-            ${DEFAULT_yiimpadmin} \
+            "${DEFAULT_yiimpadmin}" \
             yiimpadmin
 
         if [ -z "${yiimpadmin}" ]; then
@@ -57,7 +59,7 @@ if [[ ("$UsingSSH" == "yes") ]]; then
         input_box "Please open PuTTY Key Generator on your local machine and generate a new public key." \
             "To paste your Public key use ctrl shift right click.
       \n\nPublic Key:" \
-            ${DEFAULT_ssh_key} \
+            "${DEFAULT_ssh_key}" \
             ssh_key
 
         if [ -z "${ssh_key}" ]; then
@@ -66,95 +68,140 @@ if [[ ("$UsingSSH" == "yes") ]]; then
         fi
     fi
 
-    # create random user password
-    RootPassword=$(openssl rand -base64 8 | tr -d "=+/")
     clear
 
-    # Add user
+    # Add user with disabled password (SSH key authentication only)
     echo -e "$YELLOW => Adding new user and setting SSH key... <= ${NC}"
-    sudo adduser ${yiimpadmin} --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
-    echo -e "${RootPassword}\n${RootPassword}" | passwd ${yiimpadmin}
-    sudo usermod -aG sudo ${yiimpadmin}
-    
-    # Create SSH Key structure
-    mkdir -p /home/${yiimpadmin}/.ssh
-    touch /home/${yiimpadmin}/.ssh/authorized_keys
-    chown -R ${yiimpadmin}:${yiimpadmin} /home/${yiimpadmin}/.ssh
-    chmod 700 /home/${yiimpadmin}/.ssh
-    chmod 644 /home/${yiimpadmin}/.ssh/authorized_keys
-    authkeys=/home/${yiimpadmin}/.ssh/authorized_keys
-    echo "$ssh_key" >"$authkeys"
+    sudo adduser "${yiimpadmin}" --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
+    sudo usermod -aG sudo "${yiimpadmin}"
 
-    # enabling yiimpool command
-    echo '# yiimp
-  # It needs passwordless sudo functionality.
-  '""''"${yiimpadmin}"''""' ALL=(ALL) NOPASSWD:ALL
-  ' | sudo -E tee /etc/sudoers.d/${yiimpadmin} >/dev/null 2>&1
+    # Create SSH key structure
+    # Home directory must NOT be group/world-writable (SSH StrictModes check)
+    chmod 755 "/home/${yiimpadmin}"
+    mkdir -p "/home/${yiimpadmin}/.ssh"
+    chown "${yiimpadmin}:${yiimpadmin}" "/home/${yiimpadmin}/.ssh"
+    chmod 700 "/home/${yiimpadmin}/.ssh"
 
-    echo '
-  cd ~/Yiimpoolv1/install
-  bash start.sh
-  ' | sudo -E tee /usr/bin/yiimpool >/dev/null 2>&1
+    # Write the public key, then lock down permissions
+    # (order matters: write first so permissions are set on final content)
+    authkeys="/home/${yiimpadmin}/.ssh/authorized_keys"
+    printf '%s\n' "$ssh_key" > "$authkeys"
+    chown "${yiimpadmin}:${yiimpadmin}" "$authkeys"
+    chmod 600 "$authkeys"
+
+    # Enable the yiimpool command
+    printf '# yiimp\n# It needs passwordless sudo functionality.\n%s ALL=(ALL) NOPASSWD:ALL\n' \
+        "${yiimpadmin}" | sudo -E tee /etc/sudoers.d/"${yiimpadmin}" >/dev/null 2>&1
+
+    printf '#!/usr/bin/env bash\ncd ~/Yiimpoolv1/install\nbash start.sh\n' \
+        | sudo -E tee /usr/bin/yiimpool >/dev/null 2>&1
     sudo chmod +x /usr/bin/yiimpool
 
+    # Configure sshd for key-based authentication
+    if [ -d /etc/ssh/sshd_config.d ]; then
+        # Modern Ubuntu/Debian (20.04+): use a drop-in file
+        sudo tee /etc/ssh/sshd_config.d/10-yiimpool.conf >/dev/null <<'SSHEOF'
+# YiimPool: enforce public-key-only authentication
+PubkeyAuthentication yes
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+SSHEOF
+        sudo chmod 644 /etc/ssh/sshd_config.d/10-yiimpool.conf
+        # Neutralise cloud-init PasswordAuthentication yes override if present
+        if [ -f /etc/ssh/sshd_config.d/50-cloud-init.conf ]; then
+            sudo sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' \
+                /etc/ssh/sshd_config.d/50-cloud-init.conf
+        fi
+    else
+        # Older systems: edit the main sshd_config directly.
+        # _sshd_set replaces the directive if it already exists (commented or not),
+        # and appends it at the end of the file if it is completely absent.
+        _sshd_set() {
+            local key=$1 val=$2
+            if grep -qE "^#*${key}[[:space:]]" /etc/ssh/sshd_config; then
+                sudo sed -i "s/^#*${key}[[:space:]].*/${key} ${val}/" /etc/ssh/sshd_config
+            else
+                echo "${key} ${val}" | sudo tee -a /etc/ssh/sshd_config >/dev/null
+            fi
+        }
+        _sshd_set PubkeyAuthentication yes
+        _sshd_set KbdInteractiveAuthentication no
+        _sshd_set ChallengeResponseAuthentication no
+        _sshd_set PasswordAuthentication no
+    fi
+
+    # Restart SSH to apply the new settings
+    echo -e "$YELLOW => Restarting SSH service to apply key-auth settings... <= $NC"
+    sudo systemctl restart ssh 2>/dev/null || sudo systemctl restart sshd 2>/dev/null || sudo service ssh restart
+    echo -e "$GREEN => SSH service restarted. $NC"
+
     # Check required files and set global variables
-    cd $HOME/Yiimpoolv1/install
+    cd "$HOME/Yiimpoolv1/install"
     source pre_setup.sh
 
     # Create the STORAGE_USER and STORAGE_ROOT directory if they don't already exist.
-    if ! id -u $STORAGE_USER >/dev/null 2>&1; then
-        sudo useradd -m $STORAGE_USER
+    if ! id -u "$STORAGE_USER" >/dev/null 2>&1; then
+        sudo useradd -m "$STORAGE_USER"
     fi
-    if [ ! -d $STORAGE_ROOT ]; then
-        sudo mkdir -p $STORAGE_ROOT
+    if [ ! -d "$STORAGE_ROOT" ]; then
+        sudo mkdir -p "$STORAGE_ROOT"
     fi
 
     # Save the global options in /etc/yiimpool.conf so that standalone
     # tools know where to look for data.
-    echo 'STORAGE_USER='"${STORAGE_USER}"'
-    STORAGE_ROOT='"${STORAGE_ROOT}"'
-    PUBLIC_IP='"${PUBLIC_IP}"'
-    PUBLIC_IPV6='"${PUBLIC_IPV6}"'
-    DISTRO='"${DISTRO}"'
-    PRIVATE_IP='"${PRIVATE_IP}"'' | sudo -E tee /etc/yiimpool.conf >/dev/null 2>&1
+    sudo tee /etc/yiimpool.conf >/dev/null 2>&1 <<YIIMPCNF
+STORAGE_USER=${STORAGE_USER}
+STORAGE_ROOT=${STORAGE_ROOT}
+PUBLIC_IP=${PUBLIC_IP}
+PUBLIC_IPV6=${PUBLIC_IPV6}
+DISTRO=${DISTRO}
+PRIVATE_IP=${PRIVATE_IP}
+YIIMPCNF
 
     # Set Donor Addresses
-    echo 'BTCDON="bc1qc4qqz8eu5j7u8pxfrfvv8nmcka7whhm225a3f9"
-    LTCDON="MC9xjhE7kmeBFMs4UmfAQyWuP99M49sCQp"
-    ETHDON="0xdA929d4f03e1009Fc031210DDE03bC40ea66D044"
-    BCHDON="qpse55j0kg0txz0zyx8nsrv3pvd039c09ypplsfn87"
-    DOGEDON="DHNhm8FqNAQ1VTNwmCHAp3wfQ6PcfzN1nu"' | sudo -E tee /etc/yiimpooldonate.conf >/dev/null 2>&1
+    sudo tee /etc/yiimpooldonate.conf >/dev/null 2>&1 <<'DONEOF'
+BTCDON="3ELCjkScgaJbnqQiQvXb7Mwos1Y2x7hBFK"
+LTCDON="M8uerJZUgBn9KbTn8ng9MasM9nWFgsGftW"
+ETHDON="0xdA929d4f03e1009Fc031210DDE03bC40ea66D044"
+BCHDON="qpse55j0kg0txz0zyx8nsrv3pvd039c09ypplsfn87"
+DOGEDON="DKBddo8Qoh19PCFtopBkwTpcEU1aAqdM7S"
+DONEOF
 
-    sudo cp -r ~/Yiimpoolv1 /home/${yiimpadmin}/
+    sudo cp -r ~/Yiimpoolv1 "/home/${yiimpadmin}/"
     cd ~
-    sudo setfacl -m u:${yiimpadmin}:rwx /home/${yiimpadmin}/Yiimpoolv1
-    sudo rm -r $HOME/yiimpool
+    sudo setfacl -m "u:${yiimpadmin}:rwx" "/home/${yiimpadmin}/Yiimpoolv1"
+    sudo rm -r "$HOME/Yiimpoolv1"
     clear
     term_art
     echo
-    echo -e "${YELLOW}Setup information:$NC"
+    echo -e "${YELLOW}Setup information:${NC}"
     echo
-    echo -e "${MAGENTA}USERNAME: ${GREEN}${yiimpadmin}$NC"
-    echo -e "${MAGENTA}STORAGE_USER: ${GREEN}${STORAGE_USER}$NC"
-    echo -e "${MAGENTA}STORAGE_ROOT: ${GREEN}${STORAGE_ROOT}$NC"
-    echo -e "${MAGENTA}PUBLIC_IPV6: ${GREEN}${PUBLIC_IPV6}$NC"
-    echo -e "${MAGENTA}DISTRO: ${GREEN}${DISTRO}$NC"
-    echo -e "${MAGENTA}FIRST_TIME_SETUP: ${GREEN}${FIRST_TIME_SETUP}$NC"
+    echo -e "${MAGENTA}USERNAME:         ${GREEN}${yiimpadmin}${NC}"
+    echo -e "${MAGENTA}STORAGE_USER:     ${GREEN}${STORAGE_USER}${NC}"
+    echo -e "${MAGENTA}STORAGE_ROOT:     ${GREEN}${STORAGE_ROOT}${NC}"
+    echo -e "${MAGENTA}PUBLIC_IPV6:      ${GREEN}${PUBLIC_IPV6}${NC}"
+    echo -e "${MAGENTA}DISTRO:           ${GREEN}${DISTRO}${NC}"
+    echo -e "${MAGENTA}FIRST_TIME_SETUP: ${GREEN}${FIRST_TIME_SETUP}${NC}"
+    echo -e "${MAGENTA}PRIVATE_IP:       ${GREEN}${PRIVATE_IP}${NC}"
     echo
-    echo -e "$YELLOW New User:$MAGENTA ${yiimpadmin} $GREEN created!$YELLOW Make sure you save your$RED private key!${NC}"
+    echo -e "$YELLOW New User:$MAGENTA ${yiimpadmin} $GREEN created! $YELLOW Make sure you save your $RED private key!${NC}"
     echo
-    echo -e "$RED Please reboot the system and log in as$GREEN ${yiimpadmin} $YELLOW and type$GREEN yiimpool$YELLOW to$GREEN continu$YELLOW setup...$NC"
-    exit 0
+    echo -e "$RED Please reboot the system and log in as $GREEN ${yiimpadmin} $YELLOW and type $GREEN yiimpool $YELLOW to $GREEN continue $YELLOW setup...$NC"
     ask_reboot
 fi
 
-# New User Password Login Creation
+##############################################################################
+# Password Login Path
+##############################################################################
+
+# Collect new username if not already set
 if [ -z "${yiimpadmin:-}" ]; then
     DEFAULT_yiimpadmin=yiimpadmin
-    input_box "Creaete new username" \
+    input_box "Create new username" \
         "Please enter your new username.
   \n\nUser Name:" \
-        ${DEFAULT_yiimpadmin} \
+        "${DEFAULT_yiimpadmin}" \
         yiimpadmin
 
     if [ -z "${yiimpadmin}" ]; then
@@ -163,13 +210,14 @@ if [ -z "${yiimpadmin:-}" ]; then
     fi
 fi
 
+# Collect password
 if [ -z "${RootPassword:-}" ]; then
     DEFAULT_RootPassword=$(openssl rand -base64 8 | tr -d "=+/")
     input_box "User Password" \
         "Enter your new user password or use this randomly system generated one.
-  \n\nUnfortunatley dialog doesnt let you copy. So you have to write it down.
+  \n\nUnfortunately dialog doesnt let you copy. So you have to write it down.
   \n\nUser password:" \
-        ${DEFAULT_RootPassword} \
+        "${DEFAULT_RootPassword}" \
         RootPassword
 
     if [ -z "${RootPassword}" ]; then
@@ -196,79 +244,76 @@ case $response in
     clear
     echo -e "$YELLOW => Adding new user and password... <= ${NC}"
 
-    sudo adduser ${yiimpadmin} --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
-    echo -e ""${RootPassword}"\n"${RootPassword}"" | passwd ${yiimpadmin}
-    sudo usermod -aG sudo ${yiimpadmin}
+    sudo adduser "${yiimpadmin}" --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
+    printf '%s\n%s\n' "${RootPassword}" "${RootPassword}" | passwd "${yiimpadmin}"
+    sudo usermod -aG sudo "${yiimpadmin}"
 
-    # enabling yiimpool command
-    echo '# yiimp
-    # It needs passwordless sudo functionality.
-    '""''"${yiimpadmin}"''""' ALL=(ALL) NOPASSWD:ALL
-    ' | sudo -E tee /etc/sudoers.d/${yiimpadmin} >/dev/null 2>&1
+    # Enable the yiimpool command
+    printf '# yiimp\n# It needs passwordless sudo functionality.\n%s ALL=(ALL) NOPASSWD:ALL\n' \
+        "${yiimpadmin}" | sudo -E tee /etc/sudoers.d/"${yiimpadmin}" >/dev/null 2>&1
 
-    echo '
-    cd ~/Yiimpoolv1/install
-    bash start.sh
-    ' | sudo -E tee /usr/bin/yiimpool >/dev/null 2>&1
+    printf '#!/usr/bin/env bash\ncd ~/Yiimpoolv1/install\nbash start.sh\n' \
+        | sudo -E tee /usr/bin/yiimpool >/dev/null 2>&1
     sudo chmod +x /usr/bin/yiimpool
 
     # Check required files and set global variables
-    cd $HOME/Yiimpoolv1/install
+    cd "$HOME/Yiimpoolv1/install"
     source pre_setup.sh
 
     # Create the STORAGE_USER and STORAGE_ROOT directory if they don't already exist.
-    if ! id -u $STORAGE_USER >/dev/null 2>&1; then
-        sudo useradd -m $STORAGE_USER
+    if ! id -u "$STORAGE_USER" >/dev/null 2>&1; then
+        sudo useradd -m "$STORAGE_USER"
     fi
-    if [ ! -d $STORAGE_ROOT ]; then
-        sudo mkdir -p $STORAGE_ROOT
+    if [ ! -d "$STORAGE_ROOT" ]; then
+        sudo mkdir -p "$STORAGE_ROOT"
     fi
 
     # Save the global options in /etc/yiimpool.conf so that standalone
     # tools know where to look for data.
-    echo 'STORAGE_USER='"${STORAGE_USER}"'
-    STORAGE_ROOT='"${STORAGE_ROOT}"'
-    PUBLIC_IP='"${PUBLIC_IP}"'
-    PUBLIC_IPV6='"${PUBLIC_IPV6}"'
-    DISTRO='"${DISTRO}"'
-
-    PRIVATE_IP='"${PRIVATE_IP}"'' | sudo -E tee /etc/yiimpool.conf >/dev/null 2>&1
+    sudo tee /etc/yiimpool.conf >/dev/null 2>&1 <<YIIMPCNF
+STORAGE_USER=${STORAGE_USER}
+STORAGE_ROOT=${STORAGE_ROOT}
+PUBLIC_IP=${PUBLIC_IP}
+PUBLIC_IPV6=${PUBLIC_IPV6}
+DISTRO=${DISTRO}
+PRIVATE_IP=${PRIVATE_IP}
+YIIMPCNF
 
     # Set Donor Addresses
-    echo 'BTCDON="bc1qc4qqz8eu5j7u8pxfrfvv8nmcka7whhm225a3f9"
-    LTCDON="MC9xjhE7kmeBFMs4UmfAQyWuP99M49sCQp"
-    ETHDON="0xdA929d4f03e1009Fc031210DDE03bC40ea66D044"
-    BCHDON="qpse55j0kg0txz0zyx8nsrv3pvd039c09ypplsfn87"
-    DOGEDON="DHNhm8FqNAQ1VTNwmCHAp3wfQ6PcfzN1nu"' | sudo -E tee /etc/yiimpooldonate.conf >/dev/null 2>&1
+    sudo tee /etc/yiimpooldonate.conf >/dev/null 2>&1 <<'DONEOF'
+BTCDON="3ELCjkScgaJbnqQiQvXb7Mwos1Y2x7hBFK"
+LTCDON="M8uerJZUgBn9KbTn8ng9MasM9nWFgsGftW"
+ETHDON="0xdA929d4f03e1009Fc031210DDE03bC40ea66D044"
+BCHDON="qpse55j0kg0txz0zyx8nsrv3pvd039c09ypplsfn87"
+DOGEDON="DKBddo8Qoh19PCFtopBkwTpcEU1aAqdM7S"
+DONEOF
 
-    sudo cp -r ~/Yiimpoolv1 /home/${yiimpadmin}/
+    sudo cp -r ~/Yiimpoolv1 "/home/${yiimpadmin}/"
     cd ~
-    sudo setfacl -m u:${yiimpadmin}:rwx /home/${yiimpadmin}/Yiimpoolv1
-    sudo rm -r $HOME/Yiimpoolv1
+    sudo setfacl -m "u:${yiimpadmin}:rwx" "/home/${yiimpadmin}/Yiimpoolv1"
+    sudo rm -r "$HOME/Yiimpoolv1"
     clear
     term_art
     echo
-    echo -e "${YELLOW}Setup information:$NC"
+    echo -e "${YELLOW}Setup information:${NC}"
     echo
-    echo -e "${MAGENTA}USERNAME: ${GREEN}${yiimpadmin}$NC"
-    echo -e "${MAGENTA}STORAGE_USER: ${GREEN}${STORAGE_USER}$NC"
-    echo -e "${MAGENTA}STORAGE_ROOT: ${GREEN}${STORAGE_ROOT}$NC"
-    echo -e "${MAGENTA}PUBLIC_IPV6: ${GREEN}${PUBLIC_IPV6}$NC"
-    echo -e "${MAGENTA}DISTRO: ${GREEN}${DISTRO}$NC"
-    echo -e "${MAGENTA}FIRST_TIME_SETUP: ${GREEN}${FIRST_TIME_SETUP}$NC"
-    echo -e "${MAGENTA}PRIVATE_IP: ${GREEN}${PRIVATE_IP}$NC"
+    echo -e "${MAGENTA}USERNAME:         ${GREEN}${yiimpadmin}${NC}"
+    echo -e "${MAGENTA}STORAGE_USER:     ${GREEN}${STORAGE_USER}${NC}"
+    echo -e "${MAGENTA}STORAGE_ROOT:     ${GREEN}${STORAGE_ROOT}${NC}"
+    echo -e "${MAGENTA}PUBLIC_IPV6:      ${GREEN}${PUBLIC_IPV6}${NC}"
+    echo -e "${MAGENTA}DISTRO:           ${GREEN}${DISTRO}${NC}"
+    echo -e "${MAGENTA}FIRST_TIME_SETUP: ${GREEN}${FIRST_TIME_SETUP}${NC}"
+    echo -e "${MAGENTA}PRIVATE_IP:       ${GREEN}${PRIVATE_IP}${NC}"
     echo
-    echo -e "$YELLOW New User:$MAGENTA ${yiimpadmin} $GREEN created$RED $NC"
+    echo -e "$YELLOW New User:$MAGENTA ${yiimpadmin} $GREEN created!${NC}"
     echo
-    echo -e "$RED Please reboot the system and log in as:$GREEN ${yiimpadmin} $YELLOW and type$GREEN yiimpool$YELLOW to$GREEN continu$YELLOW setup...$NC"
-    exit 0
+    echo -e "$RED Please reboot the system and log in as: $GREEN ${yiimpadmin} $YELLOW and type $GREEN yiimpool $YELLOW to $GREEN continue $YELLOW setup...$NC"
     ask_reboot
     ;;
 
 1)
-
     clear
-    bash $(basename $0) && exit
+    bash "$(basename "$0")" && exit
     ;;
 
 255) ;;
