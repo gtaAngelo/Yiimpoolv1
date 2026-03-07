@@ -51,20 +51,20 @@ A clean domain or subdomain pointed to your server's IP address is required befo
 ### Ubuntu
 | Version | Status |
 |---------|--------|
+| Ubuntu 25.04 | ✅ Supported |
 | Ubuntu 24.04 LTS | ✅ Supported |
 | Ubuntu 23.04 | ✅ Supported |
 | Ubuntu 22.04 LTS | ✅ Supported |
-| Ubuntu 20.04 LTS | ✅ Supported |
-| Ubuntu 18.04 LTS | ⚠️ Limited support |
-| Ubuntu 16.04 LTS | ⚠️ Limited support |
+| Ubuntu 20.04 LTS and older | ❌ Not supported (EOL / ESM only) |
 
 ### Debian
 | Version | Status |
 |---------|--------|
+| Debian 13 (Trixie) | ✅ Supported |
 | Debian 12 (Bookworm) | ✅ Supported |
-| Debian 11 (Bullseye) | ⚠️ Limited support |
+| Debian 11 (Bullseye) | ✅ Supported |
 
-> **Note:** Raspberry Pi OS is not supported.
+> **Note:** Ubuntu 20.04 standard support ended April 2025 and is now ESM-only. Ubuntu 16.04 and 18.04 are fully end-of-life. These versions are no longer supported. Raspberry Pi OS is not supported.
 
 ---
 
@@ -253,9 +253,18 @@ When you choose SSH key login during user creation, the following hardening is a
 | `ChallengeResponseAuthentication` | `no` | sshd config |
 | `PasswordAuthentication` | `no` | sshd config |
 
-On **Ubuntu 20.04+ / Debian 12** a drop-in file `/etc/ssh/sshd_config.d/10-yiimpool.conf` is written so the main config is never modified. Any `PasswordAuthentication yes` override left by cloud-init (`50-cloud-init.conf`) is patched automatically. On **older systems** a `_sshd_set` helper ensures each directive is added to `sshd_config` even if it was not present at all (not just commented out). The SSH service is restarted immediately so the new settings take effect without a reboot.
+A drop-in file `/etc/ssh/sshd_config.d/10-yiimpool.conf` is written so the main config is never modified. Any `PasswordAuthentication yes` override left by cloud-init (`50-cloud-init.conf`) is patched automatically. The SSH service is restarted immediately so the new settings take effect without a reboot.
 
 ---
+
+## What's New in v2.6.4
+
+### Bug Fixes
+- **PHP 8.1 installation** — Fixed silent install failure caused by `hide_output` never capturing the real exit code of backgrounded commands (`wait $pid` added); `php8.1-recode` removed (package does not exist for PHP 8.x)
+- **PHP repository detection** — Replaced fragile `*.list` glob with `grep -rq "ondrej/php"` so both `.list` and DEB822 `.sources` formats are detected correctly on Ubuntu 22.04+
+- **PHP repository validation** — Added `apt-cache show php8.1` check after `apt-get update`; stale or broken PPA entries are now detected and the PPA is force-refreshed before attempting any installs
+- **MariaDB repository** — Fixed incorrect `arch=binary=amd64,...` syntax (the `binary=` prefix is not valid in the `arch=` option); packages were never fetched because apt looked for a nonexistent architecture
+- **Dropped Ubuntu 20.04 / 18.04 / 16.04** — Ubuntu 20.04 entered ESM in April 2025 and falls outside Ondrej's PHP PPA support policy; 18.04 and 16.04 are fully end-of-life. All three versions are no longer supported
 
 ## What's New in v2.6.3
 
