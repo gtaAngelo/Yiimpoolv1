@@ -63,7 +63,33 @@ print_status "Enabling WireGuard service at boot..."
 sudo systemctl enable wg-quick@wg0
 
 print_status "Configuring firewall..."
-ufw_allow 6121
+if [ -z "${DISABLE_FIREWALL:-}" ]; then
+    hide_output sudo apt-get install -y ufw
+    
+    print_status "Configuring firewall rules..."
+    ufw_allow ssh
+    print_success "SSH port opened"
+    
+    ufw_allow http
+    print_success "HTTP port opened"
+    
+    ufw_allow https
+    print_success "HTTPS port opened"
+
+    ufw_allow 6121
+    print_success "WireGuard port opened"
+
+    SSH_PORT=$(sshd -T 2>/dev/null | grep "^port " | sed "s/port //")
+    if [ ! -z "$SSH_PORT" ] && [ "$SSH_PORT" != "22" ]; then
+        print_status "Opening alternate SSH port: $SSH_PORT"
+        ufw_allow $SSH_PORT
+        print_success "Alternate SSH port opened"
+    fi
+
+    hide_output sudo ufw --force enable
+    print_success "Firewall enabled and configured"
+fi
+
 print_success "Firewall configured for WireGuard"
 
 print_header "WireGuard Summary"
@@ -82,4 +108,4 @@ print_success "WireGuard setup completed successfully"
 
 print_divider
 
-cd $HOME/yiimpool/yiimp_single
+cd $HOME/Yiimpoolv1/yiimp_single
