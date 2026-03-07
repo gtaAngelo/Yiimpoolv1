@@ -101,3 +101,38 @@ if [ "$PUBLIC_IPV6" = "auto" ]; then
 # Use a public API to get our public IPv6 address, or fall back to local network configuration.
 PUBLIC_IPV6=$(get_publicip_from_web_service 6 || get_default_privateip 6)
 fi
+
+# Fallback: detect DISTRO if not already set by preflight.sh
+if [ -z "${DISTRO:-}" ]; then
+    if [ -f /etc/lsb-release ]; then
+        _ver=$(lsb_release -rs)
+        case "$_ver" in
+            24.04) DISTRO=24 ;;
+            23.04) DISTRO=23 ;;
+            22.04) DISTRO=22 ;;
+            20.04) DISTRO=20 ;;
+            *)     DISTRO=20 ;;
+        esac
+    elif [ -f /etc/debian_version ]; then
+        _ver=$(cut -d. -f1 /etc/debian_version)
+        case "$_ver" in
+            13) DISTRO=13 ;;
+            12) DISTRO=12 ;;
+            11) DISTRO=11 ;;
+            *)  DISTRO=12 ;;
+        esac
+    fi
+fi
+
+# Fallback: set STORAGE_USER and STORAGE_ROOT if not already set by preflight.sh
+if [ -z "${STORAGE_USER:-}" ]; then
+    STORAGE_USER="crypto-data"
+fi
+if [ -z "${STORAGE_ROOT:-}" ]; then
+    STORAGE_ROOT="/home/${STORAGE_USER}"
+fi
+
+# Set PRIVATE_IP from the default network interface
+if [ -z "${PRIVATE_IP:-}" ]; then
+    PRIVATE_IP=$(get_default_privateip 4)
+fi
