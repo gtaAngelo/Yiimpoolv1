@@ -171,14 +171,16 @@ print_header "Installing PHP 8.1"
 if [[ "$DISTRO" == "11" || "$DISTRO" == "12" || "$DISTRO" == "13" ]]; then
     if [ ! -f /etc/apt/sources.list.d/php.list ]; then
         print_status "Adding PHP repository for Debian $DISTRO"
-        apt_install python3-launchpadlib apt-transport-https lsb-release ca-certificates
+        apt_install apt-transport-https lsb-release ca-certificates
         curl -fsSL https://packages.sury.org/php/apt.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/php.gpg
         echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" | \
             sudo tee /etc/apt/sources.list.d/php.list
         hide_output sudo apt-get update
     fi
 else
-    if ! ls /etc/apt/sources.list.d/ondrej-ubuntu-php-*.list 1> /dev/null 2>&1; then
+    # Check file content rather than filename — handles both .list (older Ubuntu)
+    # and .sources (DEB822 format, Ubuntu 22.04+) without a fragile glob.
+    if ! grep -rq "ondrej/php" /etc/apt/sources.list.d/ 2>/dev/null; then
         print_status "Adding PHP repository for Ubuntu $DISTRO"
         hide_output sudo add-apt-repository -y ppa:ondrej/php
         hide_output sudo apt-get update
@@ -195,7 +197,7 @@ print_header "Installing PHP 8.1 packages"
 apt_install php8.1-fpm php8.1-opcache php8.1 php8.1-common php8.1-gd
 apt_install php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi
 apt_install php-pear php-auth-sasl mcrypt imagemagick libruby
-apt_install php8.1-curl php8.1-intl php8.1-pspell php8.1-recode php8.1-sqlite3
+apt_install php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3
 apt_install php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache
 apt_install php-imagick php-gettext php8.1-zip php8.1-mbstring
 apt_install fail2ban ntpdate python3 python3-dev python3-pip
