@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 ##################################################################################
 # This is the entry point for configuring the system.
@@ -9,7 +9,11 @@
 clear
 source /etc/functions.sh
 source /etc/yiimpool.conf
-source $STORAGE_ROOT/yiimp/.yiimp.conf
+
+# Guard: .yiimp.conf is created later in the install — only source if it exists
+if [ -f "$STORAGE_ROOT/yiimp/.yiimp.conf" ]; then
+    source "$STORAGE_ROOT/yiimp/.yiimp.conf"
+fi
 
 set -eu -o pipefail
 
@@ -26,7 +30,7 @@ print_info "Starting system configuration..."
 
 # Set timezone to UTC
 print_header "Setting TimeZone"
-if [ ! -f /etc/timezone ]; then
+if [ "$(cat /etc/timezone 2>/dev/null)" != "UTC" ]; then
     print_status "Setting timezone to UTC"
     sudo timedatectl set-timezone UTC
     restart_service rsyslog
@@ -38,17 +42,19 @@ apt_install software-properties-common build-essential
 if [[  "$DISTRO" == "11" || "$DISTRO" == "12" || "$DISTRO" == "13" ]]; then
     apt_install gnupg2
 fi
+
 # CertBot
 print_header "Installing CertBot"
-
-
 if [[ "$DISTRO" == "20" || "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" || "$DISTRO" == "25" ]]; then
     print_status "Installing CertBot via Snap for Ubuntu $DISTRO"
     hide_output sudo apt install -y snapd
     hide_output sudo snap install core
     hide_output sudo snap refresh core
     hide_output sudo snap install --classic certbot
-    sudo ln -s /snap/bin/certbot /usr/bin/certbot
+    # Only create symlink if it doesn't already exist
+    if [ ! -e /usr/bin/certbot ]; then
+        sudo ln -s /snap/bin/certbot /usr/bin/certbot
+    fi
     print_success "CertBot installation complete"
 elif [[ "$DISTRO" == "11" || "$DISTRO" == "12" || "$DISTRO" == "13" ]]; then
     print_status "Installing CertBot for Debian $DISTRO"
@@ -80,8 +86,8 @@ case "$DISTRO" in
     "23")  # Ubuntu 23.04
         REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=ppc64el,binary=s390x] https://mirror.mariadb.org/repo/11.8/ubuntu mantic main"
         ;;
-    "24")  # Ubuntu 24.04
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary-ppc64el,binary-s390x] https://mirror.mariadb.org/repo/11.8/ubuntu noble main"
+    "24")  # Ubuntu 24.04 — arch= uses equals signs consistently (hyphens were a typo)
+        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=ppc64el,binary=s390x] https://mirror.mariadb.org/repo/11.8/ubuntu noble main"
         ;;
     "13")  # Debian 13
         REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=binary=amd64,binary=arm64,binary=i386,binary=ppc64el] https://mirror.mariadb.org/repo/11.8/debian trixie main"
@@ -106,14 +112,8 @@ echo "$REPO_LINE" | sudo tee /etc/apt/sources.list.d/mariadb.list >/dev/null
 print_success "MariaDB repository setup complete"
 hide_output sudo apt-get update
 
-if [ ! -f /boot/grub/menu.lst ]; then
-    hide_output sudo apt-get upgrade -y
-else
-    sudo rm /boot/grub/menu.lst
-    sudo update-grub-legacy-ec2 -y
-    hide_output sudo apt-get upgrade -y
-fi
-
+# Upgrade system packages (removed legacy EC2/grub menu.lst check — not applicable on modern systems)
+hide_output sudo apt-get upgrade -y
 hide_output sudo apt-get dist-upgrade -y
 hide_output sudo apt-get autoremove -y
 
@@ -126,7 +126,7 @@ apt_install python3 python3-dev python3-pip \
 print_success "Base system packages installed"
 
 print_header "Initializing System Random Number Generator"
-hide_output dd if=/dev/random of=/dev/urandom bs=1 count=32 2>/dev/null
+# dd to /dev/urandom is a no-op on modern kernels (3.17+); pollinate handles seeding
 hide_output sudo pollinate -q -r
 print_success "Random number generator initialized"
 
@@ -134,21 +134,21 @@ print_header "Initializing UFW Firewall"
 set +eu +o pipefail
 if [ -z "${DISABLE_FIREWALL:-}" ]; then
     hide_output sudo apt-get install -y ufw
-    
+
     print_status "Configuring firewall rules..."
     ufw_allow ssh
     print_success "SSH port opened"
-    
+
     ufw_allow http
     print_success "HTTP port opened"
-    
+
     ufw_allow https
     print_success "HTTPS port opened"
 
     SSH_PORT=$(sshd -T 2>/dev/null | grep "^port " | sed "s/port //")
-    if [ ! -z "$SSH_PORT" ] && [ "$SSH_PORT" != "22" ]; then
+    if [ -n "$SSH_PORT" ] && [ "$SSH_PORT" != "22" ]; then
         print_status "Opening alternate SSH port: $SSH_PORT"
-        ufw_allow $SSH_PORT
+        ufw_allow "$SSH_PORT"
         print_success "Alternate SSH port opened"
     fi
 
@@ -187,12 +187,11 @@ else
     fi
 fi
 
-
 hide_output sudo apt-get update
 
 print_status "Installing PHP packages..."
 
-print_header "Installing PHP 8.1 packages..."
+print_header "Installing PHP 8.1 packages"
 apt_install php8.1-fpm php8.1-opcache php8.1 php8.1-common php8.1-gd
 apt_install php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi
 apt_install php-pear php-auth-sasl mcrypt imagemagick libruby
@@ -204,7 +203,8 @@ apt_install coreutils pollinate unzip unattended-upgrades cron
 apt_install pwgen libgmp3-dev libmysqlclient-dev libcurl4-gnutls-dev
 apt_install libkrb5-dev libldap2-dev libidn11-dev gnutls-dev librtmp-dev
 apt_install build-essential libtool autotools-dev automake pkg-config libevent-dev bsdmainutils libssl-dev
-apt_install automake cmake gnupg2 ca-certificates lsb-release nginx certbot libsodium-dev
+# Note: certbot is intentionally omitted here — already installed via snap above for Ubuntu
+apt_install automake cmake gnupg2 ca-certificates lsb-release nginx libsodium-dev
 apt_install libnghttp2-dev librtmp-dev libssh2-1 libssh2-1-dev libldap2-dev libidn11-dev libpsl-dev libkrb5-dev php8.1-memcache php8.1-memcached memcached
 apt_install php8.1-mysql php8.1-mbstring
 apt_install libssh-dev libbrotli-dev php8.1-curl
@@ -212,24 +212,41 @@ print_success "PHP 8.1 packages installed"
 print_success "PHP installation complete"
 
 print_header "Installing phpMyAdmin"
-hide_output sudo wget https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
-hide_output sudo tar xzf phpMyAdmin-latest-all-languages.tar.gz
-sudo rm phpMyAdmin-latest-all-languages.tar.gz
-sudo mv phpMyAdmin-*-all-languages /usr/share/phpmyadmin
+_pma_dir=$(mktemp -d)
+print_status "Downloading phpMyAdmin..."
+hide_output sudo wget -q -P "$_pma_dir" https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+print_status "Extracting phpMyAdmin..."
+hide_output sudo tar xzf "$_pma_dir/phpMyAdmin-latest-all-languages.tar.gz" -C "$_pma_dir"
+sudo rm "$_pma_dir/phpMyAdmin-latest-all-languages.tar.gz"
+sudo mv "$_pma_dir"/phpMyAdmin-*-all-languages /usr/share/phpmyadmin
+sudo rm -rf "$_pma_dir"
 sudo mkdir -p /usr/share/phpmyadmin/tmp
-sudo chmod 777 /usr/share/phpmyadmin/tmp
+sudo chown -R www-data:www-data /usr/share/phpmyadmin/tmp
+sudo chmod 755 /usr/share/phpmyadmin/tmp
 print_success "phpMyAdmin installation complete"
 
 print_header "Setting PHP Version"
+# Register php8.1 first if not already registered, then set as default
+if ! update-alternatives --list php 2>/dev/null | grep -q "/usr/bin/php8.1"; then
+    sudo update-alternatives --install /usr/bin/php php /usr/bin/php8.1 81
+fi
 sudo update-alternatives --set php /usr/bin/php8.1
 print_success "PHP version set to 8.1"
 
 print_header "Cloning YiiMP Repository"
-hide_output sudo git clone ${YiiMPRepo} $STORAGE_ROOT/yiimp/yiimp_setup/yiimp
+if [ -z "${YiiMPRepo:-}" ]; then
+    print_error "YiiMPRepo is not set. Cannot clone YiiMP repository."
+    exit 1
+fi
+if [ -z "${STORAGE_ROOT:-}" ]; then
+    print_error "STORAGE_ROOT is not set. Cannot determine clone destination."
+    exit 1
+fi
+hide_output sudo git clone "${YiiMPRepo}" "$STORAGE_ROOT/yiimp/yiimp_setup/yiimp"
 print_success "YiiMP repository cloned successfully"
 
-hide_output sudo service nginx restart
+restart_service nginx
 print_success "Nginx restarted"
 
 set +eu +o pipefail
-cd $HOME/Yiimpoolv1/yiimp_single
+cd "$HOME/Yiimpoolv1/yiimp_single"
