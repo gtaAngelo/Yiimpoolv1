@@ -46,7 +46,7 @@ if [[ "$FIRST_TIME_SETUP" == "1" ]]; then
     sudo chmod +x /usr/bin/editconf.py
     echo -e "${GREEN}Copied functions and editconf.py to system directories.${NC}\n"
 
-    # Check system setup: Are we running as root on Ubuntu 16.04/18.04/20.04 on a
+    # Check system setup: Are we running as root on Ubuntu 22.04+ on a
     # machine with enough memory?
     # If not, this shows an error and exits.
     echo -e "${YELLOW}Running preflight system checks...${NC}\n"
@@ -83,7 +83,7 @@ if [[ "$FIRST_TIME_SETUP" == "1" ]]; then
         message_box "Yiimpool Installer $VERSION" \
         "${YELLOW}Hello and thanks for using the Yiimpool Installer!${NC}
         \n\n${GREEN}Installation for the most part is fully automated. In most cases any user responses that are needed are asked prior to the installation.${NC}
-        \n\n${RED}NOTE: You should only install this on a brand new Ubuntu 20.04, Ubuntu 18.04, or Ubuntu 16.04 installation.${NC}"
+        \n\n${RED}NOTE: You should only install this on a brand new Ubuntu 22.04, 23.04, 24.04, or 25.04 installation.${NC}"
         source existing_user.sh
         exit
     else

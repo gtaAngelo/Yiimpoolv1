@@ -107,11 +107,11 @@ if [ -z "${DISTRO:-}" ]; then
     if [ -f /etc/lsb-release ]; then
         _ver=$(lsb_release -rs)
         case "$_ver" in
+            25.04) DISTRO=25 ;;
             24.04) DISTRO=24 ;;
             23.04) DISTRO=23 ;;
             22.04) DISTRO=22 ;;
-            20.04) DISTRO=20 ;;
-            *)     DISTRO=20 ;;
+            *)     DISTRO=22 ;;
         esac
     elif [ -f /etc/debian_version ]; then
         _ver=$(cut -d. -f1 /etc/debian_version)

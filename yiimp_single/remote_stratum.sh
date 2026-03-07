@@ -38,7 +38,7 @@ apt_dist_upgrade
 
 apt_install software-properties-common
 
-if [[ ("${DISTRO}" == "18" || "${DISTRO}" == "20" || "${DISTRO}" == "22" || "${DISTRO}" == "24") ]]; then
+if [[ ("${DISTRO}" == "22" || "${DISTRO}" == "23" || "${DISTRO}" == "24" || "${DISTRO}" == "25") ]]; then
     hide_output sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
 fi
 hide_output sudo apt-get update

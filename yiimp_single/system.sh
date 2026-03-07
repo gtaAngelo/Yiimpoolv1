@@ -77,9 +77,6 @@ fi
 
 REPO_LINE=""
 case "$DISTRO" in
-    "20")  # Ubuntu 20.04
-        REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/11.8/ubuntu focal main"
-        ;;
     "22")  # Ubuntu 22.04
         REPO_LINE="deb [signed-by=/etc/apt/keyrings/mariadb.gpg arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/11.8/ubuntu jammy main"
         ;;

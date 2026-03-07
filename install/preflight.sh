@@ -15,22 +15,20 @@ echo -e "${YELLOW}Running pre-flight checks...${NC}\n"
 if [[ -f /etc/lsb-release ]]; then
 
     UBUNTU_DESCRIPTION=$(lsb_release -rs)
-    if [[ "${UBUNTU_DESCRIPTION}" == "24.04" ]]; then
+    if [[ "${UBUNTU_DESCRIPTION}" == "25.04" ]]; then
+        DISTRO=25
+    elif [[ "${UBUNTU_DESCRIPTION}" == "24.04" ]]; then
         DISTRO=24
     elif [[ "${UBUNTU_DESCRIPTION}" == "23.04" ]]; then
         DISTRO=23
     elif [[ "${UBUNTU_DESCRIPTION}" == "22.04" ]]; then
         DISTRO=22
-    elif [[ "${UBUNTU_DESCRIPTION}" == "20.04" ]]; then
-        DISTRO=20
-    elif [[ "${UBUNTU_DESCRIPTION}" == "25.04" ]]; then
-        DISTRO=25
     else
-        echo "This script only supports Ubuntu 20.04, 23.04, and 24.04. Debian 12 is also supported."
+        echo "This script only supports Ubuntu 22.04, 23.04, 24.04, or 25.04. Debian 11/12/13 is also supported."
         exit 1
     fi
 else
-    
+
     DEBIAN_DESCRIPTION=$(cat /etc/debian_version | cut -d. -f1)
     if [[ "${DEBIAN_DESCRIPTION}" == "13" ]]; then
         DISTRO=13
@@ -39,7 +37,7 @@ else
     elif [[ "${DEBIAN_DESCRIPTION}" == "11" ]]; then
         DISTRO=11
     else
-        echo "This script only supports Ubuntu 20.04, 23.04, and 24.04. Debian 12 is also supported."
+        echo "This script only supports Ubuntu 22.04, 23.04, 24.04, or 25.04. Debian 11/12/13 is also supported."
         exit 1
     fi
 fi

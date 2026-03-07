@@ -45,12 +45,7 @@ hide_output sudo apt-get install -y software-properties-common build-essential
 
 # CertBot
 
-if [[ "$DISTRO" == "16" || "$DISTRO" == "18" ]]; then
-    print_status "Installing CertBot (PPA)..."
-    hide_output sudo add-apt-repository -y ppa:certbot/certbot
-    hide_output sudo apt-get update
-    print_success "CertBot installed."
-elif [[ "$DISTRO" == "20" || "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" ]]; then
+if [[ "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" || "$DISTRO" == "25" ]]; then
     print_status "Installing CertBot (snap)..."
     hide_output sudo apt install -y snapd
     hide_output sudo snap install core
@@ -59,7 +54,7 @@ elif [[ "$DISTRO" == "20" || "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO"
     sudo ln -s /snap/bin/certbot /usr/bin/certbot
     print_success "CertBot installed."
 
-elif [[ "$DISTRO" == "12" || "$DISTRO" == "11" ]]; then
+elif [[ "$DISTRO" == "12" || "$DISTRO" == "11" || "$DISTRO" == "13" ]]; then
     print_status "Installing CertBot..."
     hide_output sudo apt install -y certbot
     print_success "CertBot installed."
@@ -77,15 +72,6 @@ print_status "Installing MariaDB..."
 hide_output sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8
 
 case "$DISTRO" in
-    "16")  # Ubuntu 16.04
-        sudo add-apt-repository -y 'deb [arch=amd64,arm64,i386,ppc64el] https://mirror.mariadb.org/repo/10.4/ubuntu xenial main' >/dev/null 2>&1
-        ;;
-    "18")  # Ubuntu 18.04
-        sudo add-apt-repository  -y 'deb [arch=amd64,arm64,ppc64el] https://mirror.mariadb.org/repo/10.6/ubuntu bionic main' >/dev/null 2>&1
-        ;;
-    "20")   # Ubuntu 20.04
-        sudo add-apt-repository -y 'deb [arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/10.6/ubuntu focal main' >/dev/null 2>&1
-        ;;
     "22")   # Ubuntu 22.04
         sudo add-apt-repository -y 'deb [arch=amd64,arm64,ppc64el,s390x] https://mirror.mariadb.org/repo/10.6/ubuntu jammy main' >/dev/null 2>&1
         ;;
@@ -180,11 +166,11 @@ if [[ "$DISTRO" == "12" ]]; then
     apt_install python3-launchpadlib
 fi
 
-if [[ "$DISTRO" == "16" || "$DISTRO" == "18" || "$DISTRO" == "20" || "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" ]]; then
-    if [ ! -f /etc/apt/sources.list.d/ondrej-php-bionic.list ]; then
+if [[ "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" || "$DISTRO" == "25" ]]; then
+    if ! grep -rq "ondrej/php" /etc/apt/sources.list.d/ 2>/dev/null; then
         hide_output sudo add-apt-repository -y ppa:ondrej/php
     fi
-elif [[ "$DISTRO" == "12" || "$DISTRO" == "11" ]]; then
+elif [[ "$DISTRO" == "13" || "$DISTRO" == "12" || "$DISTRO" == "11" ]]; then
     if [ ! -f /etc/apt/sources.list.d/ondrej-php.list ]; then
         hide_output sudo apt-get install -y apt-transport-https lsb-release ca-certificates
         wget -qO - https://packages.sury.org/php/apt.gpg | sudo apt-key add -
@@ -195,12 +181,12 @@ fi
 
 hide_output sudo apt-get update
 
-if [[ "$DISTRO" == "16" || "$DISTRO" == "18" || "$DISTRO" == "20" || "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" ]]; then
+if [[ "$DISTRO" == "22" || "$DISTRO" == "23" || "$DISTRO" == "24" || "$DISTRO" == "25" ]]; then
 
     apt_install php8.1-fpm php8.1-opcache php8.1 php8.1-common php8.1-gd
     apt_install php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi
     apt_install php-pear php-auth-sasl mcrypt imagemagick libruby
-    apt_install php8.1-curl php8.1-intl php8.1-pspell php8.1-recode php8.1-sqlite3
+    apt_install php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3
     apt_install php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache
     apt_install php-imagick php-gettext php8.1-zip php8.1-mbstring
     apt_install fail2ban ntpdate python3 python3-dev python3-pip

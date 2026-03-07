@@ -14,7 +14,7 @@ print_status "Installing required MOTD packages"
 apt_install lsb-release update-motd landscape-common update-notifier-common
 
 print_status "Configuring MOTD for your system"
-if [[ $DISTRO = "16" || $DISTRO = "17" || $DISTRO = "18" || $DISTRO = "19" || $DISTRO = "20" || $DISTRO = "21" || $DISTRO = "22" || $DISTRO = "23" || $DISTRO = "24" ]]; then
+if [[ $DISTRO = "22" || $DISTRO = "23" || $DISTRO = "24" || $DISTRO = "25" ]]; then
     print_info "Setting up MOTD for Ubuntu"
     cd $HOME/Yiimpoolv1/yiimp_single/ubuntu/etc/update-motd.d
     sudo rm -f /etc/update-motd.d/00-header /etc/update-motd.d/10-sysinfo /etc/update-motd.d/90-footer

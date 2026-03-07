@@ -15,18 +15,9 @@ SYSCTL_CONF="/etc/sysctl.d/99-yiimpool.conf"
 
 print_header "Server Performance Optimization"
 
-# Install HWE kernel for BBR support only on older Ubuntu releases that
-# need it. Ubuntu 20.04+ and Debian 12 ship a kernel (>=5.4 / >=6.1)
-# that already includes TCP BBR natively — no extra package is needed.
-if [ "${DISTRO}" == "16" ]; then
-    print_status "Installing HWE kernel for BBR support (Ubuntu 16.04)..."
-    hide_output sudo apt-get install -y linux-generic-hwe-16.04
-elif [ "${DISTRO}" == "18" ]; then
-    print_status "Installing HWE kernel for BBR support (Ubuntu 18.04)..."
-    hide_output sudo apt-get install -y linux-generic-hwe-18.04
-else
-    print_status "Kernel already supports BBR — skipping HWE package install"
-fi
+# Ubuntu 22.04+ and Debian 11+ ship a kernel (>=5.15 / >=6.1) that
+# already includes TCP BBR natively — no HWE package is needed.
+print_status "Kernel already supports BBR — skipping HWE package install"
 
 # Load the BBR kernel module now so the sysctl write below succeeds
 # immediately. This is a no-op if BBR is already built-in or loaded.
