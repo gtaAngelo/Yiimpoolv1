@@ -562,10 +562,14 @@ print_header() {
     local width
     width=$(tput cols 2>/dev/null || echo 60)
     local prefix="── ${title} "
+    # ${#prefix} counts visual characters correctly in a UTF-8 locale;
+    # subtract 4 for the two '─' chars in the prefix (each is 1 visual col
+    # but bash counts them as 1 char each — no adjustment needed on modern bash).
+    # Use printf "%.0s─" to repeat the box-drawing char without tr byte issues.
     local remaining=$(( width - ${#prefix} ))
     [ "$remaining" -lt 2 ] && remaining=2
     local fill
-    fill=$(printf '%*s' "$remaining" '' | tr ' ' '─')
+    fill=$(printf "%.0s─" $(seq 1 "$remaining"))
     echo -e "\n\033[1;36m${prefix}${fill}${NC}\n"
 }
 
@@ -599,6 +603,6 @@ print_divider() {
     local width
     width=$(tput cols 2>/dev/null || echo 60)
     local fill
-    fill=$(printf '%*s' "$width" '' | tr ' ' '─')
+    fill=$(printf "%.0s─" $(seq 1 "$width"))
     echo -e "\n${DIM}${fill}${NC}\n"
 }

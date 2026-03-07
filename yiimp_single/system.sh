@@ -218,6 +218,10 @@ hide_output sudo wget -q -P "$_pma_dir" https://www.phpmyadmin.net/downloads/php
 print_status "Extracting phpMyAdmin..."
 hide_output sudo tar xzf "$_pma_dir/phpMyAdmin-latest-all-languages.tar.gz" -C "$_pma_dir"
 sudo rm "$_pma_dir/phpMyAdmin-latest-all-languages.tar.gz"
+# Remove existing installation so mv replaces rather than nests inside it
+if [ -d /usr/share/phpmyadmin ]; then
+    sudo rm -rf /usr/share/phpmyadmin
+fi
 sudo mv "$_pma_dir"/phpMyAdmin-*-all-languages /usr/share/phpmyadmin
 sudo rm -rf "$_pma_dir"
 sudo mkdir -p /usr/share/phpmyadmin/tmp
