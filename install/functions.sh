@@ -86,27 +86,6 @@ function install_end_message() {
 
 }
 
-# A function to ask if the user wants to reboot the system
-function ask_reboot() {
-  while true; do
-    read -r -p "Do you want to reboot the system? (y/n): " reboot_choice
-    case "$reboot_choice" in
-      [Yy]* )
-        echo "Rebooting system..."
-        sleep 1
-        sudo reboot
-        break
-        ;;
-      [Nn]* )
-        echo "Reboot cancelled by user."
-        break
-        ;;
-      * )
-        echo "Please answer yes (y) or no (n)."
-        ;;
-    esac
-  done
-}
 
 function term_art() {
   clear

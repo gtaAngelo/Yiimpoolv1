@@ -176,5 +176,4 @@ print_message() {
 
 print_message
 exit 0
-ask_reboot
 

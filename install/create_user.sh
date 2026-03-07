@@ -55,15 +55,16 @@ if [[ "$UsingSSH" == "yes" ]]; then
     fi
 
     if [ -z "${ssh_key:-}" ]; then
-        DEFAULT_ssh_key=PublicKey
-        input_box "Please open PuTTY Key Generator on your local machine and generate a new public key." \
-            "To paste your Public key use ctrl shift right click.
-      \n\nPublic Key:" \
-            "${DEFAULT_ssh_key}" \
-            ssh_key
+        clear
+        echo -e "${YELLOW}Open PuTTY Key Generator, generate your key pair, and copy the text from${NC}"
+        echo -e "${GREEN}'Public key for pasting into OpenSSH authorized_keys file'${NC}${YELLOW} box.${NC}"
+        echo -e "${YELLOW}To paste in this terminal use: ${GREEN}ctrl+shift+right-click${NC}"
+        echo
+        echo -ne "${YELLOW}Paste your SSH public key and press Enter: ${NC}"
+        read -r ssh_key
 
         if [ -z "${ssh_key}" ]; then
-            # user hit ESC/cancel
+            echo -e "${RED}No key entered. Exiting.${NC}"
             exit
         fi
     fi
@@ -188,7 +189,9 @@ DONEOF
     echo -e "$YELLOW New User:$MAGENTA ${yiimpadmin} $GREEN created! $YELLOW Make sure you save your $RED private key!${NC}"
     echo
     echo -e "$RED Please reboot the system and log in as $GREEN ${yiimpadmin} $YELLOW and type $GREEN yiimpool $YELLOW to $GREEN continue $YELLOW setup...$NC"
-    ask_reboot
+    echo
+    echo -e "$YELLOW To connect with PuTTY, go to: $GREEN Connection > SSH > Auth > Credentials$YELLOW and browse to your$RED .ppk$YELLOW private key file before connecting.${NC}"
+    exit 0
 fi
 
 ##############################################################################
@@ -308,7 +311,6 @@ DONEOF
     echo -e "$YELLOW New User:$MAGENTA ${yiimpadmin} $GREEN created!${NC}"
     echo
     echo -e "$RED Please reboot the system and log in as: $GREEN ${yiimpadmin} $YELLOW and type $GREEN yiimpool $YELLOW to $GREEN continue $YELLOW setup...$NC"
-    ask_reboot
     ;;
 
 1)
