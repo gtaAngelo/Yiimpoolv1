@@ -22,17 +22,34 @@ BACKUP_DIR="$HOME/yiimpool_backups"
 
 # Query the GitHub API and return the latest YiimPool release tag.
 # Returns the tag string on success, exits non-zero on failure.
+# Does not require jq — uses grep/sed as primary parser with jq as optional enhancement.
 get_latest_release() {
-    local repo="Afiniel/Yiimpoolv1"
-    local latest
-    latest=$(curl -sL --max-time 10 \
-        "https://api.github.com/repos/${repo}/releases/latest" \
-        | jq -r '.tag_name' 2>/dev/null)
+    local repo="afiniel/Yiimpoolv1"
+    local response latest
 
-    if [ -z "$latest" ] || [ "$latest" = "null" ]; then
-        log_message "$RED" "Could not fetch latest release from GitHub. Check your internet connection."
+    response=$(curl -sL --max-time 15 \
+        "https://api.github.com/repos/${repo}/releases/latest" 2>/dev/null)
+
+    if [ -z "$response" ]; then
+        log_message "$RED" "No response from GitHub API. Check your internet connection."
         return 1
     fi
+
+    # Parse tag_name: use jq if available, otherwise grep+sed (no extra deps needed)
+    if command -v jq &>/dev/null; then
+        latest=$(printf '%s' "$response" | jq -r '.tag_name' 2>/dev/null)
+    else
+        latest=$(printf '%s' "$response" \
+            | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' \
+            | head -1 \
+            | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+    fi
+
+    if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+        log_message "$RED" "Could not parse release tag from GitHub API response."
+        return 1
+    fi
+
     echo "$latest"
 }
 
