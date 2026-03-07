@@ -61,7 +61,7 @@ if [[ "$UsingSSH" == "yes" ]]; then
         echo -e "${YELLOW}To paste in this terminal use: ${GREEN}ctrl+shift+right-click${NC}"
         echo
         echo -ne "${YELLOW}Paste your SSH public key and press Enter: ${NC}"
-        read -r ssh_key
+        read -r ssh_key < /dev/tty
 
         if [ -z "${ssh_key}" ]; then
             echo -e "${RED}No key entered. Exiting.${NC}"
