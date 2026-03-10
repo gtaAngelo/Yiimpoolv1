@@ -15,7 +15,7 @@
 #########################################################
 
 # Default version tag if not provided as environment variable
-TAG=${TAG:-v2.6.6}
+TAG=${TAG:-v2.6.7}
 
 # File paths
 YIIMPOOL_VERSION_FILE="/etc/yiimpoolversion.conf"
@@ -43,8 +43,20 @@ clone_or_update_repo() {
     echo "Repository cloned."
   else
     echo "Updating Yiimpool Installer to ${TAG}..."
+    # Ensure repository directory is owned by the invoking user to avoid
+    # Git's "dubious ownership" protection when the repo was created as root
+    # (for example, from an earlier sudo-based install run).
+    if command -v stat >/dev/null 2>&1; then
+      repo_owner="$(stat -c '%U' "$YIIMPOOL_INSTALL_DIR" 2>/dev/null || echo "")"
+      if [ -n "$repo_owner" ] && [ "$repo_owner" != "$USER" ]; then
+        sudo chown -R "$USER":"$USER" "$YIIMPOOL_INSTALL_DIR"
+      fi
+    else
+      # Fallback: attempt to fix ownership recursively without inspection.
+      sudo chown -R "$USER":"$USER" "$YIIMPOOL_INSTALL_DIR"
+    fi
+
     cd "$YIIMPOOL_INSTALL_DIR"
-    sudo chown -R "$USER" "$YIIMPOOL_INSTALL_DIR/.git/"
     git fetch --depth 1 --force --prune origin tag "${TAG}"
     if ! git checkout -q "${TAG}"; then
       log_error "Failed to update repository to ${TAG}."
