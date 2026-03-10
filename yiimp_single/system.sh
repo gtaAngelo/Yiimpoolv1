@@ -105,10 +105,11 @@ echo "$REPO_LINE" | sudo tee /etc/apt/sources.list.d/mariadb.list >/dev/null
 print_success "MariaDB repository setup complete"
 hide_output sudo apt-get update
 
-# Upgrade system packages (removed legacy EC2/grub menu.lst check — not applicable on modern systems)
-hide_output sudo apt-get upgrade -y
-hide_output sudo apt-get dist-upgrade -y
-hide_output sudo apt-get autoremove -y
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+hide_output sudo -E apt-get upgrade -y
+hide_output sudo -E apt-get dist-upgrade -y
+hide_output sudo -E apt-get autoremove -y
 
 print_header "Installing Base System Packages"
 
