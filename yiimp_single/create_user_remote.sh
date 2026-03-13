@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 ##################################################################################
 # This is the entry point for configuring the system.                            #
@@ -9,7 +9,7 @@
 export TERM=xterm
 
 if [ -z "${TAG}" ]; then
-TAG=v2.6.3
+TAG=v2.6.8
 fi
 echo 'VERSION='"${TAG}"'' | sudo -E tee /etc/yiimpoolversion.conf >/dev/null 2>&1
 
@@ -43,7 +43,7 @@ source /etc/functions.sh
 echo -e "${YELLOW} Beginning remote server setup — this may take a while...${NC}"
 
 # Get logged in user name
-whoami=`whoami`
+whoami=$(whoami)
 echo -e "${YELLOW} Modifying existing user $whoami for YiimPool support...${NC}"
 sudo usermod -aG sudo ${whoami}
 
@@ -121,7 +121,7 @@ if
   [ $AVAILABLE_DISK_SPACE -gt 5242880 ]
 then
 echo "Adding a swap file to the system..."
-  dd if=/dev/zero of=/swapfile bs=2048 count=$[1024*1024] status=none
+  dd if=/dev/zero of=/swapfile bs=2048 count=$((1024*1024)) status=none
     if [ -e /swapfile ]; then
       chmod 600 /swapfile
       hide_output mkswap /swapfile
@@ -229,11 +229,11 @@ if [ -z "$STORAGE_ROOT" ]; then
 fi
 
 # Create the STORAGE_USER and STORAGE_ROOT directory if they don't already exist.
-if ! id -u $STORAGE_USER >/dev/null 2>&1; then
-  sudo useradd -m $STORAGE_USER
+if ! id -u "$STORAGE_USER" >/dev/null 2>&1; then
+  sudo useradd -m "$STORAGE_USER"
 fi
-if [ ! -d $STORAGE_ROOT ]; then
-  sudo mkdir -p $STORAGE_ROOT
+if [ ! -d "$STORAGE_ROOT" ]; then
+  sudo mkdir -p "$STORAGE_ROOT"
 fi
 
 # Save the global options in /etc/Yiimpoolv1.conf so that standalone

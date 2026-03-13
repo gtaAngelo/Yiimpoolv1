@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 #####################################################
 # Created by Afiniel for Yiimpool use

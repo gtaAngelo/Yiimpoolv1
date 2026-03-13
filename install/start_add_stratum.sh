@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 ##########################################
 # Created by Afiniel for Yiimpool use
@@ -14,7 +14,7 @@ source /etc/functions.sh
 source /etc/yiimpool.conf
 source /etc/yiimpoolversion.conf
 
-cd $HOME/Yiimpoolv1/install
+cd "$HOME/Yiimpoolv1/install"
 
 source questions_add_stratum.sh
 clear

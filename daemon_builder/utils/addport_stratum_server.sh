@@ -75,7 +75,7 @@ else
 
 	DIALOGFORLISTALGOS=${DIALOGFORLISTALGOS=dialog}
 	tempfile=$(mktemp)
-	trap "rm -f $tempfile" 0 1 2 5 15
+	trap 'rm -f "$tempfile"' 0 1 2 5 15
 
 	$DIALOGFORLISTALGOS --colors --title "\Zb\Zr\Z7| Select the algorithm for coin: \Zn\ZR\ZB\Z0${coinsymbol^^}\Zn\Zb\Zr\Z7 |" --clear --colors --no-items --nocancel --shadow \
 			--radiolist "\n\
@@ -87,7 +87,7 @@ else
 		What is your algorithm? choose from the following..." \
 		55 60 47 $optionslistalgos 2> $tempfile
 	retvalalgoselected=$?
-	ALGOSELECTED=`cat $tempfile`
+	ALGOSELECTED=$(cat "$tempfile")
 	case $retvalalgoselected in
 	  0)
 		coinalgo="${ALGOSELECTED}";;
@@ -342,7 +342,7 @@ SSH_OPTIONS="-oLogLevel=error"
 SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
 SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 
-B64_remote=`base64 --wrap=0 ${script_remote}`
+B64_remote=$(base64 --wrap=0 "${script_remote}")
 system_remote="base64 -d - > ${remote_script} <<< ${B64_remote};"
 system_remote="${system_remote} chmod u+x ${remote_script};"
 system_remote="${system_remote} sh -c 'nohup ${remote_script}'"
@@ -378,7 +378,7 @@ SSH_OPTIONS="-oLogLevel=error"
 SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
 SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 
-B64_remote=`base64 --wrap=0 ${script_remote}`
+B64_remote=$(base64 --wrap=0 "${script_remote}")
 system_remote="base64 -d - > ${remote_script} <<< ${B64_remote};"
 system_remote="${system_remote} chmod u+x ${remote_script};"
 system_remote="${system_remote} sh -c 'nohup ${remote_script}'"
@@ -414,7 +414,7 @@ SSH_OPTIONS="-oLogLevel=error"
 SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
 SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 
-B64_remote=`base64 --wrap=0 ${script_remote}`
+B64_remote=$(base64 --wrap=0 "${script_remote}")
 system_remote="base64 -d - > ${remote_script} <<< ${B64_remote};"
 system_remote="${system_remote} chmod u+x ${remote_script};"
 system_remote="${system_remote} sh -c 'nohup ${remote_script}'"

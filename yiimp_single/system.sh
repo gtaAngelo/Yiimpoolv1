@@ -37,7 +37,7 @@ if [ "$(cat /etc/timezone 2>/dev/null)" != "UTC" ]; then
 fi
 print_success "Timezone set to UTC"
 
-apt_install software-properties-common build-essential gnupg2
+hide_output sudo apt install -y software-properties-common build-essential gnupg2
 
 # CertBot
 print_header "Installing CertBot"
@@ -113,10 +113,10 @@ hide_output sudo -E apt-get autoremove -y
 
 print_header "Installing Base System Packages"
 
-apt_install python3 python3-dev python3-pip
-apt_install wget curl git sudo coreutils bc
-apt_install haveged pollinate unzip
-apt_install unattended-upgrades cron ntp fail2ban screen rsyslog lolcat nginx haproxy supervisor
+hide_output sudo apt install -y python3 python3-dev python3-pip
+hide_output sudo apt install -y wget curl git sudo coreutils bc
+hide_output sudo apt install -y haveged pollinate unzip
+hide_output sudo apt install -y unattended-upgrades cron ntp fail2ban screen rsyslog lolcat nginx haproxy supervisor
 
 print_success "Base system packages installed"
 
@@ -166,7 +166,7 @@ print_header "Installing PHP 8.1"
 if [[ "$DISTRO" == "11" || "$DISTRO" == "12" || "$DISTRO" == "13" ]]; then
     if [ ! -f /etc/apt/sources.list.d/php.list ]; then
         print_status "Adding PHP repository for Debian $DISTRO"
-        apt_install apt-transport-https lsb-release ca-certificates
+        hide_output sudo apt install -y apt-transport-https lsb-release ca-certificates
         curl -fsSL https://packages.sury.org/php/apt.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/php.gpg
         echo "deb [signed-by=/etc/apt/keyrings/php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" | \
             sudo tee /etc/apt/sources.list.d/php.list
@@ -203,22 +203,22 @@ fi
 print_status "Installing PHP packages..."
 
 print_header "Installing PHP 8.1 packages"
-apt_install php8.1-fpm php8.1-opcache php8.1 php8.1-common php8.1-gd
-apt_install php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi
-apt_install php-pear php-auth-sasl mcrypt imagemagick libruby
-apt_install php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3
-apt_install php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache
-apt_install php-imagick php-gettext php8.1-zip php8.1-mbstring
-apt_install fail2ban ntpdate python3 python3-dev python3-pip
-apt_install coreutils pollinate unzip unattended-upgrades cron
-apt_install pwgen libgmp3-dev libmysqlclient-dev libcurl4-gnutls-dev
-apt_install libkrb5-dev libldap2-dev libidn11-dev gnutls-dev librtmp-dev
-apt_install build-essential libtool autotools-dev automake pkg-config libevent-dev bsdmainutils libssl-dev
+hide_output sudo apt install -y php8.1-fpm php8.1-opcache php8.1 php8.1-common php8.1-gd
+hide_output sudo apt install -y php8.1-mysql php8.1-imap php8.1-cli php8.1-cgi
+hide_output sudo apt install -y php-pear php-auth-sasl mcrypt imagemagick libruby
+hide_output sudo apt install -y php8.1-curl php8.1-intl php8.1-pspell php8.1-sqlite3
+hide_output sudo apt install -y php8.1-tidy php8.1-xmlrpc php8.1-xsl memcached php-memcache
+hide_output sudo apt install -y php-imagick php-gettext php8.1-zip php8.1-mbstring
+hide_output sudo apt install -y fail2ban ntpdate python3 python3-dev python3-pip
+hide_output sudo apt install -y coreutils pollinate unzip unattended-upgrades cron
+hide_output sudo apt install -y pwgen libgmp3-dev libmysqlclient-dev libcurl4-gnutls-dev
+hide_output sudo apt install -y libkrb5-dev libldap2-dev libidn11-dev gnutls-dev librtmp-dev
+hide_output sudo apt install -y build-essential libtool autotools-dev automake pkg-config libevent-dev bsdmainutils libssl-dev
 # Note: certbot is intentionally omitted here — already installed via snap above for Ubuntu
-apt_install automake cmake gnupg2 ca-certificates lsb-release nginx libsodium-dev
-apt_install libnghttp2-dev librtmp-dev libssh2-1 libssh2-1-dev libldap2-dev libidn11-dev libpsl-dev libkrb5-dev php8.1-memcache php8.1-memcached memcached
-apt_install php8.1-mysql php8.1-mbstring
-apt_install libssh-dev libbrotli-dev php8.1-curl
+hide_output sudo apt install -y automake cmake gnupg2 ca-certificates lsb-release nginx libsodium-dev
+hide_output sudo apt install -y libnghttp2-dev librtmp-dev libssh2-1 libssh2-1-dev libldap2-dev libidn11-dev libpsl-dev libkrb5-dev php8.1-memcache php8.1-memcached memcached
+hide_output sudo apt install -y php8.1-mysql php8.1-mbstring
+hide_output sudo apt install -y libssh-dev libbrotli-dev php8.1-curl
 print_success "PHP 8.1 packages installed"
 print_success "PHP installation complete"
 

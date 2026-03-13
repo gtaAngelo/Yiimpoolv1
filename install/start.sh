@@ -70,10 +70,10 @@ if [[ "$FIRST_TIME_SETUP" == "1" ]]; then
 
     # Check for user
     echo -e "${YELLOW}Installing necessary packages for setup to continue...${NC}\n"
-    hide_output sudo apt-get -q -q update
+    hide_output sudo apt-get update
     hide_output sudo apt-get install -y figlet
     hide_output sudo apt-get install -y lolcat
-    apt_get_quiet install dialog python3 python3-pip acl nano git apt-transport-https || exit 1
+    hide_output sudo apt-get install -y dialog python3 python3-pip acl nano git apt-transport-https
     echo -e "${GREEN}Installed necessary packages.${NC}\n"
 
     # Are we running as root?

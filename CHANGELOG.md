@@ -4,6 +4,31 @@ All notable changes to YiimPool are documented here.
 
 ---
 
+## [v2.6.8] — 2026-03-13
+
+### Bug Fixes
+
+- **`yiimp_single/remote_system_stratum_server.sh`** — Fixed single-quoted `'$STORAGE_ROOT/yiimp/'` in `-e` test (always evaluated to false); directory check now uses double quotes so the variable expands correctly.
+- **`yiimp_single/remote_stratum.sh`** — Fixed missing `install` subcommand in `apt-get -y libmysqlclient-dev` (package was silently never installed).
+- **`yiimp_upgrade/up_web.sh`** — Fixed single-quoted `'$STORAGE_ROOT/...'` preventing variable expansion in `-e` test, and fixed inverted `!` condition that removed the directory only when it didn't exist.
+
+### Improvements
+
+- **`mysql` → `mariadb`** — Replaced all `sudo mysql` calls with `sudo mariadb` across `yiimp_single/db.sh`, `install/add_stratum_db.sh`, `yiimp_upgrade/db.sh`, and `yiimp_upgrade/health_check.sh` to eliminate the deprecation warning on MariaDB 11.x.
+- **`chmod 777` → `chmod 755`** — Replaced all 114 world-writable `chmod 777` calls in `daemon_builder/utils/source.sh` and `daemon_builder/utils/upgrade.sh` (build temp dirs); removes unnecessary write permission for group/other.
+- **`tempfile` → `mktemp`** — Replaced all 10 `TMP=$(tempfile)` calls in `daemon_builder/utils/upgrade.sh`; `tempfile` was removed in Ubuntu 22.04+.
+- **Shebang fixes** — Corrected `#!/bin/env bash` → `#!/usr/bin/env bash` in 25 scripts across `daemon_builder/`, `install/`, `yiimp_single/`, and `yiimp_upgrade/`.
+- **`apt_install` removal** — Removed the `apt_install` wrapper from `install/functions.sh` and replaced all usages with `hide_output sudo apt install -y` across 10 scripts.
+- **Add-stratum workflow** — Quoted unquoted `$STORAGE_ROOT` / `$HOME` / `$DEFAULT_*` variables throughout `install/questions_add_stratum.sh`, `add_stratum_db.sh`, `setsid_stratum_server.sh`, `start_add_stratum.sh`; replaced all backtick subshells with `$()`; simplified redundant if/else copy to a single `sudo cp`.
+- **`yiimp_single/stratum.sh` + `remote_stratum.sh`** — Quoted all `$STORAGE_ROOT` paths in `tee`, `chmod`, `cd`, and `setfacl` calls; fixed unquoted sources.
+- **`yiimp_single/create_user_remote.sh`** — Replaced backtick `whoami` with `$()`; fixed deprecated `$[...]` arithmetic to `$((...))`.
+- **`daemon_builder/utils/addport.sh` + `addport_stratum_server.sh`** — Fixed unquoted `$tempfile` in `trap`; replaced backtick `cat $tempfile` and `base64` calls with `$()`.
+- **`yiimp_single/db.sh`** — Fixed debconf pre-seed package name typo (`maria-db-11.8` → `mariadb-server-11.8`); replaced fragile config append with `printf ... | sudo tee -a`; added source guards.
+- **`yiimp_single/yiimp_confs/yiimpserverconfig.sh`** — Rewrote to eliminate duplicate heredoc blocks; added source guards; resolved DB/stratum values per wireguard mode before a single `tee` heredoc.
+- **Version** — Bumped `TAG` to `v2.6.8` in `ver.sh`, `install.sh`, and `yiimp_single/create_user_remote.sh`.
+
+---
+
 ## [v2.6.3] — 2026-03-07
 
 ### Bug Fixes

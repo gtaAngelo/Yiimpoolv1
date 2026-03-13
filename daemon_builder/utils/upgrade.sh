@@ -192,12 +192,12 @@ if [[ ("$autogen" == "true") ]]; then
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh" ]]; then
             echo "genbuild.sh not found skipping"
         else
-            sudo chmod 777 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh
+            sudo chmod 755 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh
         fi
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform" ]]; then
             echo "build_detect_platform not found skipping"
         else
-            sudo chmod 777 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform
+            sudo chmod 755 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform
         fi
         echo
 		clear;
@@ -205,8 +205,8 @@ if [[ ("$autogen" == "true") ]]; then
         echo -e "$GREEN   Starting configure coin...													$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         ./configure CPPFLAGS="-I$STORAGE_ROOT/daemon_builder/berkeley/db4/include -O2" LDFLAGS="-L$STORAGE_ROOT/daemon_builder/berkeley/db4/lib" --with-incompatible-bdb --without-gui --disable-tests
         echo
 		clear;
@@ -214,11 +214,11 @@ if [[ ("$autogen" == "true") ]]; then
         echo -e "$GREEN   Starting make coin...															$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         # make install
-        TMP=$(tempfile)
+        TMP=$(mktemp)
         make -j${NPROC} 2>&1 | tee $TMP
         OUTPUT=$(cat $TMP)
         echo $OUTPUT
@@ -257,13 +257,13 @@ if [[ ("$autogen" == "true") ]]; then
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh" ]]; then
             echo "genbuild.sh not found skipping"
         else
-            sudo chmod 777 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh
+            sudo chmod 755 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh
         fi
         
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform" ]]; then
             echo "build_detect_platform not found skipping"
         else
-            sudo chmod 777 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform
+            sudo chmod 755 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform
         fi
         echo
 		clear;
@@ -271,8 +271,8 @@ if [[ ("$autogen" == "true") ]]; then
         echo -e "$GREEN   Starting configure coin...													$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         ./configure CPPFLAGS="-I$STORAGE_ROOT/daemon_builder/berkeley/db5/include -O2" LDFLAGS="-L$STORAGE_ROOT/daemon_builder/berkeley/db5/lib" --with-incompatible-bdb --without-gui --disable-tests
         echo
@@ -281,11 +281,11 @@ if [[ ("$autogen" == "true") ]]; then
         echo -e "$GREEN   Starting make coin...															$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         # make install
-        TMP=$(tempfile)
+        TMP=$(mktemp)
         make -j${NPROC} 2>&1 | tee $TMP
         OUTPUT=$(cat $TMP)
         echo $OUTPUT
@@ -324,13 +324,13 @@ if [[ ("$autogen" == "true") ]]; then
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh" ]]; then
             echo "genbuild.sh not found skipping"
         else
-            sudo chmod 777 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh
+            sudo chmod 755 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh
         fi
         
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform" ]]; then
             echo "build_detect_platform not found skipping"
         else
-            sudo chmod 777 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform
+            sudo chmod 755 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform
         fi
         echo
 		clear;
@@ -338,8 +338,8 @@ if [[ ("$autogen" == "true") ]]; then
         echo -e "$GREEN   Starting configure coin...													$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         ./configure CPPFLAGS="-I$STORAGE_ROOT/daemon_builder/berkeley/db5.3/include -O2" LDFLAGS="-L$STORAGE_ROOT/daemon_builder/berkeley/db5.3/lib" --with-incompatible-bdb --without-gui --disable-tests
         echo
@@ -348,11 +348,11 @@ if [[ ("$autogen" == "true") ]]; then
         echo -e "$GREEN   Starting make coin...															$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         # make install
-        TMP=$(tempfile)
+        TMP=$(mktemp)
         make -j${NPROC} 2>&1 | tee $TMP
         OUTPUT=$(cat $TMP)
         echo $OUTPUT
@@ -391,13 +391,13 @@ if [[ ("$autogen" == "true") ]]; then
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh" ]]; then
             echo "genbuild.sh not found skipping"
         else
-            sudo chmod 777 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh
+            sudo chmod 755 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/share/genbuild.sh
         fi
         
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform" ]]; then
             echo "build_detect_platform not found skipping"
         else
-            sudo chmod 777 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform
+            sudo chmod 755 $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src/leveldb/build_detect_platform
         fi
         echo
 		clear;
@@ -405,8 +405,8 @@ if [[ ("$autogen" == "true") ]]; then
         echo -e "$GREEN   Starting configure coin...													$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         ./configure CPPFLAGS="-I$STORAGE_ROOT/daemon_builder/berkeley/db6.2/include -O2" LDFLAGS="-L$STORAGE_ROOT/daemon_builder/berkeley/db6.2/lib" --with-incompatible-bdb --without-gui --disable-tests
         echo
@@ -415,11 +415,11 @@ if [[ ("$autogen" == "true") ]]; then
         echo -e "$GREEN   Starting make coin...															$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         # make install
-        TMP=$(tempfile)
+        TMP=$(mktemp)
         make -j${NPROC} 2>&1 | tee $TMP
         OUTPUT=$(cat $TMP)
         echo $OUTPUT
@@ -459,16 +459,16 @@ if [[ ("$autogen" == "true") ]]; then
         read -r -e -p "where is the folder that contains the BUILD.SH installation file, example xxutil :" reputil
         cd $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/${reputil}
         echo $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/${reputil}
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         bash build.sh -j$(nproc)
         
         if [[ ! -e "$STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/${reputil}/fetch-params.sh" ]]; then
             echo "fetch-params.sh not found skipping"
         else
-            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
             sh fetch-params.sh
         fi
     fi
@@ -501,7 +501,7 @@ else
             cd $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/depends
             if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                 # make install
-                TMP=$(tempfile)
+                TMP=$(mktemp)
                 hide_output make -j${NPROC} 2>&1 | tee $TMP
                 OUTPUT=$(cat $TMP)
                 echo $OUTPUT
@@ -513,11 +513,11 @@ else
                 echo -e "$GREEN   Starting make coin...														$NC"
                 echo -e "$CYAN --------------------------------------------------------------------------- 	$NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 # make install
-                TMP=$(tempfile)
+                TMP=$(mktemp)
                 make -j${NPROC} 2>&1 | tee $TMP
                 OUTPUT=$(cat $TMP)
                 echo $OUTPUT
@@ -551,8 +551,8 @@ else
 				clear;
                 echo -e "$YELLOW => Configure with i686-pc-linux-gnu... $NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                     hide_output ./configure --with-incompatible-bdb --prefix=`pwd`/depends/i686-pc-linux-gnu
@@ -563,8 +563,8 @@ else
                 echo
                 echo -e "$YELLOW => Configure with x86_64-pc-linux-gnu... $NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                     hide_output ./configure --with-incompatible-bdb --prefix=`pwd`/depends/x86_64-pc-linux-gnu
@@ -576,8 +576,8 @@ else
 				clear;
                 echo -e "$YELLOW => Configure with i686-w64-mingw32... $NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                     hide_output ./configure --with-incompatible-bdb --prefix=`pwd`/depends/i686-w64-mingw32
@@ -589,8 +589,8 @@ else
 				clear;
                 echo -e "$YELLOW => Configure with x86_64-w64-mingw32... $NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                     hide_output ./configure --with-incompatible-bdb --prefix=`pwd`/depends/x86_64-w64-mingw32
@@ -602,8 +602,8 @@ else
 				clear;
                 echo -e "$YELLOW => Configure with x86_64-apple-darwin14... $NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                     hide_output ./configure --with-incompatible-bdb --prefix=`pwd`/depends/x86_64-apple-darwin14
@@ -614,8 +614,8 @@ else
                 echo
                 echo -e "$YELLOW => Configure with arm-linux-gnueabihf... $NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                     hide_output ./configure --with-incompatible-bdb --prefix=`pwd`/depends/arm-linux-gnueabihf
@@ -627,8 +627,8 @@ else
 				clear;
                 echo -e "$YELLOW => Configure with aarch64-linux-gnu... $NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                     hide_output ./configure --with-incompatible-bdb --prefix=`pwd`/depends/aarch64-linux-gnu
@@ -645,12 +645,12 @@ else
 			clear;
             echo -e "$YELLOW => Executing make to finalize... $NC"
             echo
-            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
             
             if [[ ("$ifhidework" == "y" || "$ifhidework" == "Y") ]]; then
                 # make install
-                TMP=$(tempfile)
+                TMP=$(mktemp)
                 hide_output make -j${NPROC} 2>&1 | tee $TMP
                 OUTPUT=$(cat $TMP)
                 echo $OUTPUT
@@ -662,11 +662,11 @@ else
                 echo -e "$GREEN   Starting make coin...														$NC"
                 echo -e "$CYAN --------------------------------------------------------------------------- 	$NC"
                 echo
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+                sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
                 
                 # make install
-                TMP=$(tempfile)
+                TMP=$(mktemp)
                 make -j${NPROC} 2>&1 | tee $TMP
                 OUTPUT=$(cat $TMP)
                 echo $OUTPUT
@@ -691,11 +691,11 @@ else
             echo -e "$GREEN   Starting make coin...														$NC"
             echo -e "$CYAN --------------------------------------------------------------------------- 	$NC"
             echo
-            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+            sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
             
             # make install
-            TMP=$(tempfile)
+            TMP=$(mktemp)
             make -j${NPROC} 2>&1 | tee $TMP
             OUTPUT=$(cat $TMP)
             echo $OUTPUT
@@ -734,8 +734,8 @@ else
         echo -e "$GREEN   Starting make clean...														$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         sudo make clean
         echo
@@ -744,13 +744,13 @@ else
         echo -e "$GREEN   Starting precompiling with make depends libs*									$NC"
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         echo
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         sudo make libleveldb.a libmemenv.a
         cd $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/src
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 777 {} \;
-        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 777 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type d -exec chmod 755 {} \;
+        sudo find $STORAGE_ROOT/daemon_builder/temp_coin_builds/${coindir}/ -type f -exec chmod 755 {} \;
         
         sed -i '/USE_UPNP:=0/i BDB_LIB_PATH = '${absolutepath}'/'${installtoserver}'/berkeley/db4/lib\nBDB_INCLUDE_PATH = '${absolutepath}'/'${installtoserver}'/berkeley/db4/include\nOPENSSL_LIB_PATH = '${absolutepath}'/'${installtoserver}'/openssl/lib\nOPENSSL_INCLUDE_PATH = '${absolutepath}'/'${installtoserver}'/openssl/include' makefile.unix
         sed -i '/USE_UPNP:=1/i BDB_LIB_PATH = '${absolutepath}'/'${installtoserver}'/berkeley/db4/lib\nBDB_INCLUDE_PATH = '${absolutepath}'/'${installtoserver}'/berkeley/db4/include\nOPENSSL_LIB_PATH = '${absolutepath}'/'${installtoserver}'/openssl/lib\nOPENSSL_INCLUDE_PATH = '${absolutepath}'/'${installtoserver}'/openssl/include' makefile.unix
@@ -761,7 +761,7 @@ else
         echo -e "$CYAN ------------------------------------------------------------------------------- 	$NC"
         
         # make install
-        TMP=$(tempfile)
+        TMP=$(mktemp)
         make -j${NPROC} -f makefile.unix USE_UPNP=- 2>&1 | tee $TMP
         OUTPUT=$(cat $TMP)
         echo $OUTPUT

@@ -21,8 +21,8 @@ export TERM=xterm
 # Load configuration files
 source /etc/functions.sh
 source /etc/yiimpool.conf
-source $STORAGE_ROOT/yiimp/.yiimp.conf
-source $HOME/Yiimpoolv1/yiimp_single/.wireguard.install.cnf
+source "$STORAGE_ROOT/yiimp/.yiimp.conf"
+source "$HOME/Yiimpoolv1/yiimp_single/.wireguard.install.cnf"
 
 # Display terminal art and initial messages
 term_art
@@ -36,7 +36,7 @@ hide_output sudo apt-get update
 hide_output sudo apt-get -y upgrade
 apt_dist_upgrade
 
-apt_install software-properties-common
+hide_output sudo apt install -y software-properties-common
 
 if [[ ("${DISTRO}" == "22" || "${DISTRO}" == "23" || "${DISTRO}" == "24" || "${DISTRO}" == "25") ]]; then
     hide_output sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
@@ -44,7 +44,7 @@ fi
 hide_output sudo apt-get update
 
 print_status "Installing GCC versions 9 and 10"
-apt_install gcc-9 g++-9 gcc-10 g++-10
+hide_output sudo apt install -y gcc-9 g++-9 gcc-10 g++-10
 
 print_status "Configuring GCC alternatives"
 hide_output sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50 --slave /usr/bin/g++ g++ /usr/bin/g++-9
@@ -64,13 +64,13 @@ hide_output sudo apt-get -y upgrade
 hide_output sudo apt-get -y install p7zip-full
 
 hide_output sudo apt-get -y install libgmp-dev
-hide_output sudo apt-get -y libmysqlclient-dev
+hide_output sudo apt-get -y install libmysqlclient-dev
 hide_output sudo apt-get -y install libcurl4-openssl-dev
 
 print_status "Installing build dependencies"
-apt_install build-essential libzmq5 libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils cmake libboost-all-dev zlib1g-dev \
-libseccomp-dev libcap-dev libminiupnpc-dev gettext libcanberra-gtk-module libqrencode-dev libzmq3-dev \
-libqt5gui5 libqt5core5a libqt5webkit5-dev libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
+hide_output sudo apt install -y build-essential libzmq5 libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils cmake libboost-all-dev zlib1g-dev \
+    libseccomp-dev libcap-dev libminiupnpc-dev gettext libcanberra-gtk-module libqrencode-dev libzmq3-dev \
+    libqt5gui5 libqt5core5a libqt5webkit5-dev libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
 
 print_status "Compiling blocknotify and iniparser"
 
@@ -110,7 +110,7 @@ sudo cp blocknotify/blocknotify /usr/bin
 
 print_status "Creating stratum run scripts"
 # Create run.sh for stratum config
-sudo tee $STORAGE_ROOT/yiimp/site/stratum/config/run.sh > /dev/null <<'EOF'
+sudo tee "$STORAGE_ROOT/yiimp/site/stratum/config/run.sh" > /dev/null <<'EOF'
 #!/usr/bin/env bash
 source /etc/yiimpool.conf
 source $STORAGE_ROOT/yiimp/.yiimp.conf
@@ -124,20 +124,20 @@ done
 exec bash
 EOF
 
-sudo chmod +x $STORAGE_ROOT/yiimp/site/stratum/config/run.sh
+sudo chmod +x "$STORAGE_ROOT/yiimp/site/stratum/config/run.sh"
 
-sudo tee $STORAGE_ROOT/yiimp/site/stratum/run.sh > /dev/null <<'EOF'
+sudo tee "$STORAGE_ROOT/yiimp/site/stratum/run.sh" > /dev/null <<'EOF'
 #!/usr/bin/env bash
 source /etc/yiimpool.conf
 source $STORAGE_ROOT/yiimp/.yiimp.conf
 cd "$STORAGE_ROOT/yiimp/site/stratum/config/" && ./run.sh $*
 EOF
 
-sudo chmod +x $STORAGE_ROOT/yiimp/site/stratum/run.sh
+sudo chmod +x "$STORAGE_ROOT/yiimp/site/stratum/run.sh"
 
 print_header "Stratum Database Configuration"
 print_status "Updating stratum configuration with database credentials"
-cd $STORAGE_ROOT/yiimp/site/stratum/config
+cd "$STORAGE_ROOT/yiimp/site/stratum/config"
 
 sudo sed -i "s/password = tu8tu5/password = $BlocknotifyPassword/g" *.conf
 sudo sed -i "s/server = yaamp.com/server = $StratumURL/g" *.conf
@@ -153,8 +153,8 @@ sudo sed -i "s/username = root/username = $StratumDBUser/g" *.conf
 sudo sed -i "s/password = patofpaq/password = $StratumUserDBPassword/g" *.conf
 
 print_status "Setting directory permissions"
-sudo setfacl -m u:$USER:rwx $STORAGE_ROOT/yiimp/site/stratum/
-sudo setfacl -m u:$USER:rwx $STORAGE_ROOT/yiimp/site/stratum/config
+sudo setfacl -m u:"$USER":rwx "$STORAGE_ROOT/yiimp/site/stratum/"
+sudo setfacl -m u:"$USER":rwx "$STORAGE_ROOT/yiimp/site/stratum/config"
 
 # copy blocknotify to daemon servers
 # set daemon user and password
@@ -192,7 +192,7 @@ SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
 SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 
 # Load in a base 64 encoded version of the script.
-B64_blocknotify=`base64 --wrap=0 ${script_blocknotify}`
+B64_blocknotify=$(base64 --wrap=0 "${script_blocknotify}")
 
 # The command that will run remotely. This unpacks the
 # base64-encoded script, makes it executable, and then

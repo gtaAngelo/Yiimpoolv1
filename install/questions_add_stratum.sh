@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 ##################################################################################
 # This is the entry point for configuring the system.                            #
@@ -10,7 +10,7 @@
 source /etc/functions.sh
 source /etc/yiimpool.conf
 source "$HOME/Yiimpoolv1/yiimp_single/.wireguard.install.cnf"
-source $STORAGE_ROOT/yiimp/.yiimp.conf
+source "$STORAGE_ROOT/yiimp/.yiimp.conf"
 
 if [ -f "$STORAGE_ROOT/yiimp/.wireguard_public.conf" ]; then
   source "$STORAGE_ROOT/yiimp/.wireguard_public.conf"
@@ -26,7 +26,7 @@ input_box "Stratum Server Private IP" \
 "Enter the private IP address of the Stratum Server, as given to you by your provider.
 \n\nIf you do not have one from your provider enter the IP you assigned with WireGuard.
 \n\nPrivate IP address:" \
-$DEFAULT_NewStratumInternalIP \
+"$DEFAULT_NewStratumInternalIP" \
 NewStratumInternalIP
 
 if [ -z "$NewStratumInternalIP" ]; then
@@ -41,7 +41,7 @@ input_box "Stratum Server User Name" \
 "Enter the user name of the Stratum Server.
 \n\nThis is required for setup to complete.
 \n\nStratum Server User Name:" \
-$DEFAULT_NewStratumUser \
+"$DEFAULT_NewStratumUser" \
 NewStratumUser
 
 if [ -z "$NewStratumUser" ]; then
@@ -57,7 +57,7 @@ input_box "Stratum Server User Password" \
 \n\nThis is required for setup to complete.
 \n\nWhen pasting your password CTRL+V does NOT work, you must use SHIFT+RightMouseClick or SHIFT+INSERT.
 \n\nStratum Server User Password:" \
-$DEFAULT_NewStratumPass \
+"$DEFAULT_NewStratumPass" \
 NewStratumPass
 
 if [ -z "$NewStratumPass" ]; then
@@ -72,7 +72,7 @@ input_box "Stratum URL" \
 "Enter your stratum URL. It is recommended to use another subdomain such as stratum.$DomainName
 \n\nDo not add www. to the domain name.
 \n\nStratum URL:" \
-$DEFAULT_NewStratumURL \
+"$DEFAULT_NewStratumURL" \
 NewStratumURL
 
 if [ -z "$NewStratumURL" ]; then
@@ -90,7 +90,7 @@ input_box "Blocknotify Password" \
 \n\nThe blocknotify password is the first password in the TCP section.
 \n\nUse SHIFT+RightMouseClick or SHIFT+INSERT to paste.
 \n\nBlocknotify Password:" \
-$DEFAULT_blckntifypass \
+"$DEFAULT_blckntifypass" \
 blckntifypass
 
 if [ -z "$blckntifypass" ]; then
@@ -129,12 +129,7 @@ wireguard='"'"''"${wireguard}"''"'"'
 
 # Unless you do some serious modifications this installer will not work with any other repo of yiimp!
 YiiMPRepo='https://github.com/Kudaraidee/yiimp.git'
-' | sudo -E tee $STORAGE_ROOT/yiimp/.$generate.conf >/dev/null 2>&1
+' | sudo -E tee "$STORAGE_ROOT/yiimp/.$generate.conf" >/dev/null 2>&1
 
-# Copy the new config to a static Name
-if [ -f $STORAGE_ROOT/yiimp/.newconf.conf ]; then
-  sudo rm -r $STORAGE_ROOT/yiimp/.newconf.conf
-  sudo cp -r $STORAGE_ROOT/yiimp/.$generate.conf $STORAGE_ROOT/yiimp/.newconf.conf
-else
-  sudo cp -r $STORAGE_ROOT/yiimp/.$generate.conf $STORAGE_ROOT/yiimp/.newconf.conf
-fi
+# Copy the new config to a static name (overwrite if it exists)
+sudo cp "$STORAGE_ROOT/yiimp/.$generate.conf" "$STORAGE_ROOT/yiimp/.newconf.conf"

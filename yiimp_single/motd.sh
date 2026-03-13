@@ -11,7 +11,7 @@ source /etc/yiimpool.conf
 print_header "MOTD Configuration Setup"
 
 print_status "Installing required MOTD packages"
-apt_install lsb-release update-motd landscape-common update-notifier-common
+hide_output sudo apt install -y lsb-release update-motd landscape-common update-notifier-common
 
 print_status "Configuring MOTD for your system"
 if [[ $DISTRO = "22" || $DISTRO = "23" || $DISTRO = "24" || $DISTRO = "25" ]]; then

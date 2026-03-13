@@ -14,13 +14,21 @@
 source /etc/functions.sh
 source /etc/yiimpoolversion.conf
 source /etc/yiimpool.conf
-source $STORAGE_ROOT/yiimp/.yiimp.conf
-source $HOME/Yiimpoolv1/yiimp_single/.wireguard.install.cnf
+
+if [[ ! -f "$STORAGE_ROOT/yiimp/.yiimp.conf" ]]; then
+  echo "Error: $STORAGE_ROOT/yiimp/.yiimp.conf not found" >&2; exit 1
+fi
+source "$STORAGE_ROOT/yiimp/.yiimp.conf"
+
+if [[ ! -f "$HOME/Yiimpoolv1/yiimp_single/.wireguard.install.cnf" ]]; then
+  echo "Error: $HOME/Yiimpoolv1/yiimp_single/.wireguard.install.cnf not found" >&2; exit 1
+fi
+source "$HOME/Yiimpoolv1/yiimp_single/.wireguard.install.cnf"
 
 set -eu -o pipefail
 
 function print_error {
-    read -r line file <<<$(caller)
+    read -r line file <<< "$(caller)"
     echo "An error occurred in line $line of file $file:" >&2
     sed "${line}q;d" "$file" >&2
 }
@@ -33,8 +41,11 @@ print_info "Using STORAGE_ROOT='$STORAGE_ROOT'"
 print_info "Using YiiMPDBName='${YiiMPDBName}'"
 print_info "Using YiiMPPanelName='${YiiMPPanelName}', StratumDBUser='${StratumDBUser}'"
 
-if [[ ("$wireguard" == "true") ]]; then
-    source $STORAGE_ROOT/yiimp/.wireguard.conf
+if [[ "$wireguard" == "true" ]]; then
+    if [[ ! -f "$STORAGE_ROOT/yiimp/.wireguard.conf" ]]; then
+      echo "Error: $STORAGE_ROOT/yiimp/.wireguard.conf not found" >&2; exit 1
+    fi
+    source "$STORAGE_ROOT/yiimp/.wireguard.conf"
     print_info "WireGuard enabled, loaded .wireguard.conf"
 fi
 
@@ -44,12 +55,12 @@ print_header "MariaDB Installation"
 print_info "Installing MariaDB version $MARIADB_VERSION"
 print_info "Pre-seeding MariaDB root password for version ${MARIADB_VERSION}"
 
-sudo debconf-set-selections <<< "maria-db-$MARIADB_VERSION mysql-server/root_password password $DBRootPassword"
-sudo debconf-set-selections <<< "maria-db-$MARIADB_VERSION mysql-server/root_password_again password $DBRootPassword"
+sudo debconf-set-selections <<< "mariadb-server-$MARIADB_VERSION mysql-server/root_password password $DBRootPassword"
+sudo debconf-set-selections <<< "mariadb-server-$MARIADB_VERSION mysql-server/root_password_again password $DBRootPassword"
 
 print_status "Installing MariaDB packages..."
-print_info "Running apt_install mariadb-server mariadb-client"
-apt_install mariadb-server mariadb-client
+print_info "Installing mariadb-server mariadb-client"
+hide_output sudo apt install -y mariadb-server mariadb-client
 print_success "MariaDB installation completed"
 
 print_header "Database Configuration"
@@ -73,7 +84,7 @@ Q4="FLUSH PRIVILEGES;"
 SQL="${Q1}${Q2}${Q3}${Q4}"
 
 print_info "Running initial SQL against MariaDB (create DB and grant privileges)"
-sudo mysql -u root -p"${DBRootPassword}" -e "$SQL"
+sudo mariadb -u root -p"${DBRootPassword}" -e "$SQL"
 print_success "Database users created successfully"
 
 print_header "Database Configuration Files"
@@ -105,7 +116,7 @@ cd "$STORAGE_ROOT/yiimp/yiimp_setup/yiimp/sql"
 
 print_status "Importing main database dump..."
 print_info "Importing main dump from '2024-03-06-complete_export.sql.gz' into database '${YiiMPDBName}'"
-sudo zcat 2024-03-06-complete_export.sql.gz | sudo mysql -u root -p"${DBRootPassword}" "${YiiMPDBName}"
+sudo zcat 2024-03-06-complete_export.sql.gz | sudo mariadb -u root -p"${DBRootPassword}" "${YiiMPDBName}"
 
 SQL_FILES=(
     2024-03-18-add_aurum_algo.sql
@@ -136,16 +147,16 @@ for file in "${SQL_FILES[@]}"; do
     print_info "Processing SQL migration file '$file'"
     if [[ "$file" == *.gz ]]; then
         print_info "File '$file' detected as gzip-compressed; using zcat"
-        sudo zcat "$file" | sudo mysql -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force --binary-mode
+        sudo zcat "$file" | sudo mariadb -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force --binary-mode
     else
         print_info "File '$file' detected as plain SQL; using direct mysql import"
-        sudo mysql -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force < "$file"
+        sudo mariadb -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force < "$file"
     fi
 done
 
-#cd $HOME/Yiimpoolv1/yiimp_single/yiimp_confs
+#cd "$HOME/Yiimpoolv1/yiimp_single"/yiimp_confs
 #print_status "Enabling algorithms..."
-# sudo mysql -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force < "2025-01-29-enable-all-algos.sql"
+# sudo mariadb -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force < "2025-01-29-enable-all-algos.sql"
 print_success "Database import completed successfully"
 
 print_header "MariaDB Optimization"
@@ -161,7 +172,7 @@ config_changes=(
     'max_allowed_packet=64M'
 )
 
-if [[ ("$wireguard" == "true") ]]; then
+if [[ "$wireguard" == "true" ]]; then
     config_changes+=("bind-address=$DBInternalIP")
     print_info "Setting bind address to $DBInternalIP for WireGuard"
     print_info "Added 'bind-address=$DBInternalIP' to MariaDB configuration changes"
@@ -171,7 +182,11 @@ print_status "Updating MariaDB configuration..."
 config_string=$(printf "%s\n" "${config_changes[@]}")
 print_info "Appending the following to /etc/mysql/my.cnf:"
 print_info "$config_string"
-sudo bash -c "echo \"$config_string\" >> /etc/mysql/my.cnf"
+printf '%s\n' "${config_changes[@]}" | sudo tee -a /etc/mysql/my.cnf >/dev/null
+
+print_status "Enabling MariaDB to start on boot..."
+sudo systemctl enable mariadb
+print_success "MariaDB enabled for autostart on boot"
 
 print_status "Restarting MariaDB service..."
 print_info "Restarting MariaDB (mysql service) after configuration update"
@@ -182,9 +197,9 @@ print_header "phpMyAdmin Setup"
 print_status "Creating phpMyAdmin user..."
 
 print_info "Creating phpMyAdmin user '${PHPMyAdminUser}' with full privileges"
-sudo mysql -u root -p"${DBRootPassword}" -e "CREATE USER '${PHPMyAdminUser}'@'%' IDENTIFIED BY '${PHPMyAdminPassword}';"
-sudo mysql -u root -p"${DBRootPassword}" -e "GRANT ALL PRIVILEGES ON *.* TO '${PHPMyAdminUser}'@'%' WITH GRANT OPTION;"
-sudo mysql -u root -p"${DBRootPassword}" -e "FLUSH PRIVILEGES;"
+sudo mariadb -u root -p"${DBRootPassword}" -e "CREATE USER '${PHPMyAdminUser}'@'%' IDENTIFIED BY '${PHPMyAdminPassword}';"
+sudo mariadb -u root -p"${DBRootPassword}" -e "GRANT ALL PRIVILEGES ON *.* TO '${PHPMyAdminUser}'@'%' WITH GRANT OPTION;"
+sudo mariadb -u root -p"${DBRootPassword}" -e "FLUSH PRIVILEGES;"
 
 print_status "Restarting MariaDB service..."
 print_info "Restarting MariaDB (mysql service) after phpMyAdmin user creation"
@@ -203,4 +218,4 @@ print_warning "Please save these credentials in a secure location:"
 print_divider
 
 set +eu +o pipefail
-cd $HOME/Yiimpoolv1/yiimp_single
+cd "$HOME/Yiimpoolv1/yiimp_single"

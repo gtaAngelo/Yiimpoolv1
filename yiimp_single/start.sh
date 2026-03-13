@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 ##################################################################################
 # This is the entry point for configuring the system.                            #

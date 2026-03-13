@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 ##########################################
 # Created by Afiniel for Yiimpool use
@@ -21,7 +21,7 @@ export TERM=xterm
 
 source /etc/functions.sh
 source /etc/yiimpool.conf
-source $STORAGE_ROOT/yiimp/.yiimp.conf
+source "$STORAGE_ROOT/yiimp/.yiimp.conf"
 
 # User credentials for the remote server.
 StratumUser="${NewStratumUser}"
@@ -87,12 +87,12 @@ SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 #----------------------------------------------------------------------
 
 # Load base64-encoded versions of each script.
-B64_user=`base64 --wrap=0 ${script_create_user}`
-B64_system=`base64 --wrap=0 ${script_system_stratum}`
-B64_stratum=`base64 --wrap=0 ${script_stratum}`
-B64_motd=`base64 --wrap=0 ${script_motd_web}`
-B64_harden=`base64 --wrap=0 ${script_harden_web}`
-B64_ssh=`base64 --wrap=0 ${script_ssh}`
+B64_user=$(base64 --wrap=0 "${script_create_user}")
+B64_system=$(base64 --wrap=0 "${script_system_stratum}")
+B64_stratum=$(base64 --wrap=0 "${script_stratum}")
+B64_motd=$(base64 --wrap=0 "${script_motd_web}")
+B64_harden=$(base64 --wrap=0 "${script_harden_web}")
+B64_ssh=$(base64 --wrap=0 "${script_ssh}")
 
 # Build remote commands: decode base64, make executable, then execute.
 system_user="base64 -d - > ${remote_create_user_path} <<< ${B64_user};"

@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 ##################################################################################
 # This is the pre-flight check script for configuring the system.                #

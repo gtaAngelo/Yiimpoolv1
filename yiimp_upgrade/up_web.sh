@@ -1,22 +1,23 @@
+#!/usr/bin/env bash
+
 #####################################################
 # Created by afiniel for crypto use...
 #####################################################
 
 source /etc/functions.sh
 source /etc/yiimpool.conf
-source $STORAGE_ROOT/yiimp/.yiimp.conf
+source "$STORAGE_ROOT/yiimp/.yiimp.conf"
 
-if [[ ! -e '$STORAGE_ROOT/yiimp/yiimp_setup/yiimp' ]]; then
-sudo rm -r $STORAGE_ROOT/yiimp/yiimp_setup/yiimp
-hide_output sudo git clone ${YiiMPRepo} $STORAGE_ROOT/yiimp/yiimp_setup/yiimp
-else
-hide_output sudo git clone ${YiiMPRepo} $STORAGE_ROOT/yiimp/yiimp_setup/yiimp
+# If yiimp source already exists, remove it so we always get a fresh clone
+if [[ -e "$STORAGE_ROOT/yiimp/yiimp_setup/yiimp" ]]; then
+    sudo rm -rf "$STORAGE_ROOT/yiimp/yiimp_setup/yiimp"
 fi
+hide_output sudo git clone "${YiiMPRepo}" "$STORAGE_ROOT/yiimp/yiimp_setup/yiimp"
 
-echo Upgrading stratum...
-cd $STORAGE_ROOT/yiimp/yiimp_setup/yiimp/web/yaamp/core/functions/
+echo "Upgrading stratum..."
+cd "$STORAGE_ROOT/yiimp/yiimp_setup/yiimp/web/yaamp/core/functions/"
 
-cp -r yaamp.php $STORAGE_ROOT/yiimp/site/web/yaamp/core/functions
+cp -r yaamp.php "$STORAGE_ROOT/yiimp/site/web/yaamp/core/functions"
 
 echo "Web upgrade complete..."
-cd $HOME/Yiimpoolv1/yiimp_upgrade
+cd "$HOME/Yiimpoolv1/yiimp_upgrade"

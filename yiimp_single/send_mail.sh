@@ -24,8 +24,8 @@ fi
 
 echo -e "$YELLOW => Installing mail system  <= ${NC}"
 
-apt_install postfix 
-apt_install mailutils
+hide_output sudo apt install -y postfix
+hide_output sudo apt install -y mailutils
 
 sudo debconf-set-selections <<<"postfix postfix/mailname string ${PRIMARY_HOSTNAME}"
 sudo debconf-set-selections <<<"postfix postfix/main_mailer_type string 'Internet Site'"

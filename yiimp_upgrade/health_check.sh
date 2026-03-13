@@ -217,7 +217,7 @@ check_database() {
     if mysqladmin $mysql_auth ping >/dev/null 2>&1; then
         echo -e "  ${GREEN}[✓] MySQL/MariaDB is responding${NC}"
         echo -e "\n  Database Sizes:"
-        mysql $mysql_auth -N -e \
+        mariadb $mysql_auth -N -e \
             "SELECT table_schema,
                     ROUND(SUM(data_length + index_length) / 1024 / 1024, 2)
              FROM information_schema.tables

@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 #####################################################
 # Created by Afiniel for Yiimpool use
@@ -97,10 +97,10 @@ for file in "${SQL_FILES[@]}"; do
     print_status "Importing $file..."
     if [[ "$file" == *.gz ]]; then
         print_info "Processing compressed file..."
-        sudo zcat "$file" | sudo mysql -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force --binary-mode
+        sudo zcat "$file" | sudo mariadb -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force --binary-mode
     else
         print_info "Processing SQL file..."
-        sudo mysql -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force < "$file"
+        sudo mariadb -u root -p"${DBRootPassword}" "${YiiMPDBName}" --force < "$file"
     fi
     
     if [ $? -eq 0 ]; then
