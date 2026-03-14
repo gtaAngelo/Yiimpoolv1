@@ -51,8 +51,9 @@ hide_output sudo update-alternatives --config gcc
 hide_output sudo apt update
 hide_output sudo apt upgrade -y
 
-hide_output sudo update-alternatives --set gcc /usr/bin/gcc-9
-print_success "GCC & G++ updated to version 9"
+hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
+hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
+print_success "GCC & G++ updated to version 10"
 
 print_header "Dependencies Installation"
 print_status "Installing required packages for cryptocurrency compilation"
@@ -81,9 +82,9 @@ print_status "Building stratum "
 cd /home/crypto-data/yiimp/yiimp_setup/yiimp/stratum
 hide_output sudo git submodule init
 hide_output sudo git submodule update
-hide_output sudo make -C algos
-hide_output sudo make -C sha3
-hide_output sudo make -C iniparser
+hide_output sudo make -C algos -j$((`nproc`+1))
+hide_output sudo make -C sha3 -j$((`nproc`+1))
+hide_output sudo make -C iniparser 
 
 print_status "Configuring and building secp256k1"
 cd secp256k1 
@@ -94,7 +95,7 @@ hide_output sudo make -j$((`nproc`+1))
 
 print_status "Building main stratum"
 cd /home/crypto-data/yiimp/yiimp_setup/yiimp/stratum
-hide_output sudo make -j$((`nproc`+1))
+hide_output sudo make buildonly
 
 print_header "File Structure Setup"
 print_status "Creating stratum directory structure"
@@ -163,5 +164,6 @@ print_info "Blocknotify Location: /usr/bin/blocknotify"
 
 print_divider
 
-hide_output sudo update-alternatives --set gcc /usr/bin/gcc-9
+hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
+hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
 cd "$HOME/Yiimpoolv1/yiimp_single"

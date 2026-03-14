@@ -168,53 +168,54 @@ upgrade_stratum() {
         return 1
     fi
     
-    log_message "$GREEN" "Setting gcc to version 9..."
-    hide_output sudo update-alternatives --set gcc /usr/bin/gcc-9
-    
+    log_message "$GREEN" "Setting gcc/g++ to version 10..."
+    hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
+    hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
+
     cd $YIIMP_DIR/stratum || {
         log_message "$RED" "Failed to change to stratum directory. Exiting..."
         return 1
     }
-    
+
     sudo git submodule init
     sudo git submodule update
-    
-    cd secp256k1 || {
-        log_message "$RED" "Failed to change to secp256k1 directory. Exiting..."
-        return 1
-    }
-    
-    sudo chmod +x autogen.sh
-    hide_output sudo ./autogen.sh
-    hide_output sudo ./configure --enable-experimental --enable-module-ecdh --with-bignum=no --enable-endomorphism
-    hide_output sudo make -j$((`nproc`+1))
-    
-    cd $YIIMP_DIR/stratum || {
-        log_message "$RED" "Failed to return to stratum directory. Exiting..."
-        return 1
-    }
-    
+
     log_message "$GREEN" "Building stratum components..."
-    
-    if ! sudo make -C algos -j$(($(nproc)+1)); then
+
+    if ! sudo make -C algos; then
         log_message "$RED" "Failed to build algos. Please check the build output above for errors."
         return 1
     fi
     log_message "$GREEN" "algos built successfully!"
-    
-    if ! sudo make -C sha3 -j$(($(nproc)+1)); then
+
+    if ! sudo make -C sha3; then
         log_message "$RED" "Failed to build sha3. Please check the build output above for errors."
         return 1
     fi
     log_message "$GREEN" "sha3 built successfully!"
-    
-    if ! sudo make -C iniparser -j$(($(nproc)+1)); then
+
+    if ! sudo make -C iniparser; then
         log_message "$RED" "Failed to build iniparser. Please check the build output above for errors."
         return 1
     fi
     log_message "$GREEN" "iniparser built successfully!"
-    
-    if ! sudo make -j$(($(nproc)+1)); then
+
+    cd secp256k1 || {
+        log_message "$RED" "Failed to change to secp256k1 directory. Exiting..."
+        return 1
+    }
+
+    sudo chmod +x autogen.sh
+    hide_output sudo ./autogen.sh
+    hide_output sudo ./configure --enable-experimental --enable-module-ecdh --with-bignum=no --enable-endomorphism
+    hide_output sudo make
+
+    cd $YIIMP_DIR/stratum || {
+        log_message "$RED" "Failed to return to stratum directory. Exiting..."
+        return 1
+    }
+
+    if ! sudo make buildonly; then
         log_message "$RED" "Failed to build stratum. Please check the build output above for errors."
         return 1
     fi
@@ -244,7 +245,8 @@ upgrade_stratum() {
     sudo cp -r yaamp.php $SITE_DIR/web/yaamp/core/functions
     
     hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
-    
+    hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
+
     log_message "$GREEN" "Stratum upgrade completed successfully!"
     return 0
 }
