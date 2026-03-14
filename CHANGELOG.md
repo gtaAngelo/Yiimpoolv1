@@ -4,6 +4,27 @@ All notable changes to YiimPool are documented here.
 
 ---
 
+## [v2.7.1] — 2026-03-14
+
+### Bug Fixes
+
+- **`yiimp_upgrade/utils/functions.sh` — wrong GCC version in `upgrade_stratum()`** — Compiler was being set to `gcc-9` / `g++-9` before the stratum build. Changed to `gcc-10` / `g++-10` to match the version required by the current yiimp stratum source.
+- **`yiimp_upgrade/utils/functions.sh` — wrong stratum build order in `upgrade_stratum()`** — `secp256k1` was compiled before `algos`, `sha3`, and `iniparser`. Corrected build order: `algos` → `sha3` → `iniparser` → `secp256k1` → `make buildonly`, matching the order required by the updated yiimp stratum Makefile.
+- **`yiimp_upgrade/utils/functions.sh` — wrong final make target in `upgrade_stratum()`** — Final stratum build used `make -j$(nproc+1)` instead of `make buildonly`. Fixed.
+- **`yiimp_upgrade/utils/functions.sh` — `-j$(nproc+1)` removed from sub-library builds** — `make -C algos`, `make -C sha3`, and `make -C iniparser` were all using parallel job flags incompatible with the updated stratum Makefiles. Changed to plain `make -C <dir>`.
+- **`yiimp_upgrade/utils/update_stratum_conf.sh` — `log_message: command not found`** — Script is called via `bash` subshell which does not inherit the parent shell's functions. `log_message` is defined only in `upgrade/utils/functions.sh`, not in `/etc/functions.sh`. Fixed by defining `log_message` locally inside the script.
+
+### New Features
+
+- **`yiimp_upgrade/utils/update_stratum_conf.sh`** — New standalone script that applies pool credentials to every `*.conf` file in the live stratum config directory (`$STORAGE_ROOT/yiimp/site/stratum/config`). Applies the same six `sed` substitutions as `yiimp_single/stratum.sh`: blocknotify password, stratum server URL, database host (WireGuard-aware), database name, database username, and database password. Includes guards for missing config directory and zero conf files. Restores `www-data` ownership and `750` permissions after patching. Called automatically by `upgrade_stratum()` after every backup restore.
+
+### Improvements
+
+- **`upgrade_stratum()` — G++ now explicitly set** — `update-alternatives --set g++` is now called alongside `gcc` at both the pre-build and post-build steps to ensure the compiler pair is always consistent.
+- **`upgrade_stratum()` — config credential update integrated** — After restoring the stratum config backup, `upgrade_stratum()` now automatically calls `update_stratum_conf.sh` to re-apply pool credentials. A fallback message is shown if no backup is found (fresh `config.sample` scenario) before credentials are applied.
+
+---
+
 ## [v2.6.8] — 2026-03-13
 
 ### Bug Fixes

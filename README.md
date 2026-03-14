@@ -8,28 +8,25 @@
   <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/afiniel/Yiimpoolv1">
 </p>
 
-## Description
+## Overview
 
-YiimPool is a fully automated installer for the [YiiMP](https://github.com/Kudaraidee/yiimp) cryptocurrency mining pool software on Ubuntu and Debian systems. It handles everything from initial OS configuration and database setup to stratum compilation, SSL certificates, and server hardening.
+YiimPool is a fully automated installer for the [YiiMP](https://github.com/Kudaraidee/yiimp) cryptocurrency mining pool software, targeting Ubuntu and Debian servers. It takes a clean system from zero to a fully operational mining pool — including database setup, web server configuration, stratum compilation, SSL certificates, and server hardening — with minimal manual intervention.
 
-**Key features:**
+**Core capabilities:**
 
-- Automated installation and configuration of all required components
-- Built-in DaemonBuilder for compiling coin daemons from source
-- Multiple SSL configuration options (Let's Encrypt via Certbot or self-signed)
-- Support for both root domain and subdomain setups
-- Enhanced security features and server hardening
-- Stratum server setup with autoexchange capability
-- **Multi-server support** — add additional remote stratum servers to an existing pool
-- WireGuard VPN integration for secure multi-server networking
-- Web-based admin interface (default: `/admin/login`)
-- Built-in upgrade and database tools
-- Comprehensive screen management for service monitoring
-- phpMyAdmin for database management
-- **SSH key-only login** — full `sshd_config` hardening applied automatically at user creation (StrictModes-safe permissions, cloud-init override neutralization, immediate SSH restart)
-- **Coin daemon autostart** — each daemon compiled with DaemonBuilder is registered as a `@reboot` crontab entry with a 30-second boot delay and dedicated boot log
-- **Stratum autostart** — stratum processes registered via `@reboot` crontab with full path, deduplication, and boot log on every `addport` run
-- **System health check** — comprehensive monitoring covering disk, swap, memory, load, CPU, services (MariaDB/MySQL, PHP-FPM auto-detected), stratum sessions, database sizes, and SSL expiry
+| Feature | Details |
+|---------|---------|
+| Automated install | Full end-to-end setup of all required components |
+| Stratum server | Compiled from source with autoexchange support; auto-registered for reboot via `@reboot` crontab |
+| Multi-server | Add remote stratum servers to an existing pool via SSH |
+| WireGuard VPN | Optional encrypted tunnel for secure multi-server networking |
+| DaemonBuilder | Compile coin daemons from source with autostart on reboot |
+| SSL | Let's Encrypt (Certbot) or self-signed; auto-renewed |
+| Domain support | Root domain and subdomain configurations |
+| SSH hardening | Key-only login, `sshd_config` drop-in, cloud-init override, immediate restart |
+| Upgrade tools | In-place YiiMP and stratum upgrades with config backup and restore |
+| Health check | Disk, memory, swap, load, CPU, services, stratum sessions, DB sizes, SSL expiry |
+| Admin interface | Web-based panel at `/admin/login`; phpMyAdmin included |
 
 ---
 
@@ -55,7 +52,7 @@ A clean domain or subdomain pointed to your server's IP address is required befo
 | Ubuntu 24.04 LTS | ✅ Supported |
 | Ubuntu 23.04 | ✅ Supported |
 | Ubuntu 22.04 LTS | ✅ Supported |
-| Ubuntu 20.04 LTS and older | ❌ Not supported (EOL / ESM only) |
+
 
 ### Debian
 | Version | Status |
@@ -257,6 +254,29 @@ A drop-in file `/etc/ssh/sshd_config.d/10-yiimpool.conf` is written so the main 
 
 ---
 
+## What's New in v2.7.1
+
+### Bug Fixes
+
+- **Stratum upgrade — wrong GCC version** — `upgrade_stratum()` was setting GCC to version 9 before compiling. Changed to GCC 10 and G++ 10 to match the version required by the current yiimp stratum source.
+- **Stratum upgrade — wrong build order** — secp256k1 was being compiled before algos/sha3/iniparser. Corrected to: `algos` → `sha3` → `iniparser` → `secp256k1` → `make buildonly`, matching the order required by the updated yiimp stratum Makefile.
+- **Stratum upgrade — wrong final make target** — The final stratum build used `make -j$(nproc+1)` instead of `make buildonly`. Fixed to use `make buildonly` as required by the updated stratum source.
+- **`update_stratum_conf.sh` — `log_message` not found** — When called via `bash` subshell from the upgrade flow, `log_message` was not in scope because it is defined in `upgrade/utils/functions.sh` (not `/etc/functions.sh`). Fixed by defining `log_message` locally inside the script so it is fully self-contained.
+
+### New Features
+
+- **`yiimp_upgrade/utils/update_stratum_conf.sh`** — New standalone script that applies all pool credentials to every `*.conf` file in the live stratum config directory. Uses the exact same six `sed` substitutions as `yiimp_single/stratum.sh` (blocknotify password, stratum URL, DB host, DB name, DB username, DB password) with full WireGuard-aware host selection. Called automatically by `upgrade_stratum()` after every config restore, and can be run independently at any time:
+  ```bash
+  bash ~/Yiimpoolv1/yiimp_upgrade/utils/update_stratum_conf.sh
+  ```
+
+### Improvements
+
+- **Stratum upgrade — algos/sha3/iniparser parallelism removed** — `-j$(nproc+1)` flags removed from the `make -C algos`, `make -C sha3`, and `make -C iniparser` steps to match the plain serial build required by the updated stratum source.
+- **Stratum upgrade — G++ now explicitly set** — `update-alternatives --set g++` is now called alongside `gcc` at both the start and end of the upgrade, ensuring the compiler pair is always consistent.
+
+---
+
 ## What's New in v2.6.4
 
 ### Bug Fixes
@@ -265,27 +285,6 @@ A drop-in file `/etc/ssh/sshd_config.d/10-yiimpool.conf` is written so the main 
 - **PHP repository validation** — Added `apt-cache show php8.1` check after `apt-get update`; stale or broken PPA entries are now detected and the PPA is force-refreshed before attempting any installs
 - **MariaDB repository** — Fixed incorrect `arch=binary=amd64,...` syntax (the `binary=` prefix is not valid in the `arch=` option); packages were never fetched because apt looked for a nonexistent architecture
 - **Dropped Ubuntu 20.04 / 18.04 / 16.04** — Ubuntu 20.04 entered ESM in April 2025 and falls outside Ondrej's PHP PPA support policy; 18.04 and 16.04 are fully end-of-life. All three versions are no longer supported
-
-## What's New in v2.6.3
-
-### Bug Fixes
-- **SSH key login** — Fixed "still prompts for password after reboot" caused by missing `sshd_config` changes, wrong `authorized_keys` permissions (`644` → `600`), and no SSH service restart
-- **Coin daemon & stratum autostart** — Both were not registered for reboot persistence; `@reboot` crontab entries are now created automatically with deduplication and boot logging
-- **DaemonBuilder compile errors** — Added `PIPESTATUS` checks after every piped build step; failed compiles now abort correctly instead of silently continuing
-- **`addport` on Ubuntu 22.04+** — Fixed crash from deprecated `tempfile` command (removed from modern debianutils); replaced with `mktemp`
-- **Health check services** — Fixed hardcoded `php8.1-fpm` service name; PHP-FPM version is now detected dynamically. Fixed `mysql`-only check; MariaDB is detected automatically
-- **Health check SSL** — Fixed "expires in -5 days" message for already-expired certificates; added multi-path cert discovery for standard Let's Encrypt filenames
-- **Health check CPU** — Fixed fragile `top` field-position parsing that silently broke on some distros/locales; added `/proc/stat` fallback
-- **Remote stratum setup** — Fixed plaintext SSH credential logging and broken completion messages
-- **Add New Stratum Server** — Fixed menu option that showed "not yet available" despite a complete implementation existing
-
-### New Features
-- **`check_swap()`** — Swap monitoring added to health check
-- **`check_load()`** — System load average and uptime added to health check
-- **`check_stratum()`** — Active stratum screen session listing added to health check
-- **cron / supervisor / fail2ban** — Added to health check service monitoring
-- **SSH hardening table** — `create_user.sh` now fully configures `sshd` for key-only authentication including cloud-init override neutralization
-- **Multi-server stratum** — "Add New Stratum Server" menu option fully implemented
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the complete list of changes.
 
@@ -308,14 +307,15 @@ See [`CHANGELOG.md`](CHANGELOG.md) for the complete list of changes.
 
 ## Donations
 
-If this project has been useful to you, donations are appreciated:
+YiimPool is open-source and free to use. Donations are appreciated but entirely optional.
 
-| Coin | Address |
-|------|---------|
-| BTC | `3ELCjkScgaJbnqQiQvXb7Mwos1Y2x7hBFK` |
-| ETH | `0xdA929d4f03e1009Fc031210DDE03bC40ea66D044` |
-| LTC | `M8uerJZUgBn9KbTn8ng9MasM9nWFgsGftW` |
-| DOGE | `DKBddo8Qoh19PCFtopBkwTpcEU1aAqdM7S` |
-| SOL | `4Akj4XQXEKX4iPEd9A4ogXEPNrAsLm4wdATePz1XnyCu` |
-| BEP20 | `0xdA929d4f03e1009Fc031210DDE03bC40ea66D044` |
-| TON | `UQBzBvFrVjfo444hGHY2HBPNzL8nEIEzuQBF99PFh1UvyH7w` |
+| Coin | Network | Address |
+|------|---------|---------|
+| BTC | Bitcoin | `3ELCjkScgaJbnqQiQvXb7Mwos1Y2x7hBFK` |
+| ETH | Ethereum | `0xdA929d4f03e1009Fc031210DDE03bC40ea66D044` |
+| LTC | Litecoin | `M8uerJZUgBn9KbTn8ng9MasM9nWFgsGftW` |
+| DOGE | Dogecoin | `DKBddo8Qoh19PCFtopBkwTpcEU1aAqdM7S` |
+| SOL | Solana | `4Akj4XQXEKX4iPEd9A4ogXEPNrAsLm4wdATePz1XnyCu` |
+| BEP20 | Binance Smart Chain | `0xdA929d4f03e1009Fc031210DDE03bC40ea66D044` |
+| MATIC | Polygon | `0xdA929d4f03e1009Fc031210DDE03bC40ea66D044` |
+| TON | TON | `UQBzBvFrVjfo444hGHY2HBPNzL8nEIEzuQBF99PFh1UvyH7w` |
