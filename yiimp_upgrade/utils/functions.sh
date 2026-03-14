@@ -239,11 +239,25 @@ upgrade_stratum() {
         sudo chown -R www-data:www-data "$STRATUM_CONF"
         sudo chmod -R 750 "$STRATUM_CONF"
         log_message "$GREEN" "Stratum configuration restored from $LATEST_BACKUP"
+    else
+        log_message "$YELLOW" "No backup found — applying credentials to fresh config.sample files..."
     fi
-    
+
+    log_message "$YELLOW" "Applying pool credentials to stratum config files..."
+    UPDATE_CONF_SCRIPT="$HOME/Yiimpoolv1/yiimp_upgrade/utils/update_stratum_conf.sh"
+    if [ -f "$UPDATE_CONF_SCRIPT" ]; then
+        if ! bash "$UPDATE_CONF_SCRIPT"; then
+            log_message "$RED" "Failed to update stratum config credentials."
+            return 1
+        fi
+    else
+        log_message "$RED" "update_stratum_conf.sh not found at $UPDATE_CONF_SCRIPT"
+        return 1
+    fi
+
     cd $YIIMP_DIR/web/yaamp/core/functions/
     sudo cp -r yaamp.php $SITE_DIR/web/yaamp/core/functions
-    
+
     hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
     hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
 
