@@ -169,8 +169,8 @@ upgrade_stratum() {
     fi
     
     log_message "$GREEN" "Setting gcc/g++ to version 10..."
-    hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
-    hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
+    hide_output sudo update-alternatives --set gcc /usr/bin/gcc-9
+    hide_output sudo update-alternatives --set g++ /usr/bin/g++-9
 
     cd $YIIMP_DIR/stratum || {
         log_message "$RED" "Failed to change to stratum directory. Exiting..."
@@ -257,9 +257,6 @@ upgrade_stratum() {
 
     cd $YIIMP_DIR/web/yaamp/core/functions/
     sudo cp -r yaamp.php $SITE_DIR/web/yaamp/core/functions
-
-    hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
-    hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
 
     log_message "$GREEN" "Stratum upgrade completed successfully!"
     return 0

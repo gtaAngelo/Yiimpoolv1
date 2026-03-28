@@ -47,13 +47,15 @@ print_status "Configuring GCC alternatives"
 hide_output sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50 --slave /usr/bin/g++ g++ /usr/bin/g++-9
 hide_output sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
+
+
 hide_output sudo update-alternatives --config gcc
 hide_output sudo apt update
 hide_output sudo apt upgrade -y
 
-hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
-hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
-print_success "GCC & G++ updated to version 10"
+hide_output sudo update-alternatives --set gcc /usr/bin/gcc-9
+hide_output sudo update-alternatives --set g++ /usr/bin/g++-9
+print_success "GCC & G++ updated to version 9"
 
 print_header "Dependencies Installation"
 print_status "Installing required packages for cryptocurrency compilation"
@@ -164,6 +166,6 @@ print_info "Blocknotify Location: /usr/bin/blocknotify"
 
 print_divider
 
-hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
-hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
+#hide_output sudo update-alternatives --set gcc /usr/bin/gcc-10
+#hide_output sudo update-alternatives --set g++ /usr/bin/g++-10
 cd "$HOME/Yiimpoolv1/yiimp_single"
