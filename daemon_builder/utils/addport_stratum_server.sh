@@ -22,7 +22,7 @@ function EPHYMERAL_PORT(){
     LPORT=2768;
     UPORT=6999;
     while true; do
-        MPORT=$[$LPORT + ($RANDOM % $UPORT)];
+        MPORT=$(( LPORT + (RANDOM % (UPORT - LPORT + 1)) ));
         (echo "" >/dev/tcp/127.0.0.1/${MPORT}) >/dev/null 2>&1
         if [ $? -ne 0 ]; then
             echo $MPORT;
@@ -184,7 +184,8 @@ fi
 
 # New coin stratum start file
 
-echo '#####################################################
+echo '#!/usr/bin/env bash
+#####################################################
 # Source code from https://codereview.stackexchange.com/questions/55077/small-bash-script-to-sta$
 # Updated by Afiniel for Yiimpool use...
 #####################################################
@@ -192,7 +193,6 @@ source /etc/yiimpool.conf
 source $STORAGE_ROOT/yiimp/.yiimp.conf
 STRATUM_DIR=$STORAGE_ROOT/yiimp/site/stratum
 LOG_DIR=$STORAGE_ROOT/yiimp/site/log
-#!/usr/bin/env bash
 '""''"${coinsymbollower}"''""'="screen -dmS '""''"${coinsymbollower}"''""' bash $STRATUM_DIR/run.sh '""''"${coinsymbollower}"''""'.'""''"${coinalgo}"''".conf"'"
 '""''"${coinsymbollower}"''""'stop="'screen -X -S ${coinsymbollower} quit'"
 startstop_'""''"${coinsymbollower}"''""'() {

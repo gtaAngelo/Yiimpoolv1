@@ -6,6 +6,8 @@
 # This generator will modify the main algo.conf file
 # Create the new coin.algo.conf file
 # And update the stratum start file
+#
+# Updated: 2026-03-28
 #####################################################
 
 source /etc/yiimpool.conf
@@ -17,7 +19,7 @@ source $STORAGE_ROOT/daemon_builder/conf/info.sh
 
 clear
 
-# Generate random open PORT in the range 2768–6999
+# Generate random open PORT in the range 2768-6999
 function EPHYMERAL_PORT(){
     LPORT=2768;
     UPORT=6999;
@@ -36,30 +38,28 @@ coinport=$(EPHYMERAL_PORT)
 GETPORT="$1"
 
 if [[ ("$GETPORT" == "CREATECOIN") ]]; then
-	echo -e "$YELLOW Add port to coin:${NC} $GREEN $2 ${NC}"
+	print_info "Adding port to coin: ${GREEN}$2${NC}"
 	echo
 	CREATECOIN="true"
 fi
 
 cd ${PATH_STRATUM}/config
 
-echo -e "$YELLOW addport will randomly selects an open port for the coin between ports 2768 and 6999 and open the port in UFW. ${NC}"
+print_info "Addport will randomly select an open port between 2768 and 6999 and open it in UFW."
 
 if [[ ("$CREATECOIN" == "true") ]]; then
 	coinsymbol="$2"
 	coinalgo="$3"
 else
-	echo -e "$YELLOW Thanks for using the addport script by Afiniel. ${NC}"
+	print_header "Addport Configuration"
+	print_info "This will create a new symbol.algo.conf in ${RED}$STORAGE_ROOT/yiimp/site/stratum/config${NC}"
+	print_info "And create a new stratum.symbol run file in ${RED}/usr/bin${NC}"
 	echo
-	echo -e "$YELLOW It will also create a new symbol.algo.conf in $RED $STORAGE_ROOT/yiimp/site/stratum/config ${NC}"
-	echo -e "$YELLOW and will create a new stratum.symbol run file in $RED /usr/bin. ${NC}"
-	echo
-	
-	echo -e "$RED Make sure coin symbol is all UPPER case.${NC}"
+	print_warning "Make sure coin symbol is all UPPER case."
 	echo
 	read -e -p "Please enter the coin SYMBOL : " coinsymbol
 	echo
-	
+
 	if ! locale -a | grep en_US.utf8 > /dev/null; then
 		sudo locale-gen en_US.UTF-8
 	fi
@@ -69,7 +69,7 @@ else
 	export LANG=en_US.UTF-8
 	export LC_TYPE=en_US.UTF-8
 	export NCURSES_NO_UTF8_ACS=1
-	
+
 	convertlistalgos=$(find $STORAGE_ROOT/yiimp/site/stratum/config/ -mindepth 1 -maxdepth 1 -type f -not -name '.*' -not -name '*.sh' -not -name '*.log' -not -name 'stratum.*' -not -name '*.*.*' -iname '*.conf' -execdir basename -s '.conf' {} +);
 	optionslistalgos=$(echo -e "${convertlistalgos}" | awk '{ printf "%s on\n", $1}' | sort | uniq | grep [[:alnum:]])
 
@@ -77,25 +77,26 @@ else
 	tempfile=$(mktemp)
 	trap 'rm -f "$tempfile"' 0 1 2 5 15
 
-	$DIALOGFORLISTALGOS --colors --title "\Zb\Zr\Z7| Select the algorithm for coin: \Zn\ZR\ZB\Z0${coinsymbol^^}\Zn\Zb\Zr\Z7 |" --clear --colors --no-items --nocancel --shadow \
-			--radiolist "\n\
-	\ZB\Z1Hello, choose the algorithm for your coin\n\
-	the list scrolls so you can use the \n\
-	UP/DOWN arrow keys, the first letter of the choice as \n\
-	hotkey or number keys 1-9 to choose an option. \n\
-	Press SPACE to select an option.\Zn\n\n\
-		What is your algorithm? choose from the following..." \
+	$DIALOGFORLISTALGOS --colors --title "\Zb\Zr\Z7| Select Algorithm: ${coinsymbol^^} |" --clear --colors --no-items --nocancel --shadow \
+		--radiolist "\n\
+    Select the mining algorithm for your coin.\n\
+    Use UP/DOWN arrows or number keys 1-9 to navigate.\n\
+    Press SPACE to select an option.\n\n\
+Choose from available algorithms:" \
 		55 60 47 $optionslistalgos 2> $tempfile
+
 	retvalalgoselected=$?
 	ALGOSELECTED=$(cat "$tempfile")
 	case $retvalalgoselected in
 	  0)
-		coinalgo="${ALGOSELECTED}";;
+		coinalgo="${ALGOSELECTED}"
+		print_success "Selected algorithm: ${ALGOSELECTED}"
+		;;
 	  1)
-		echo "Cancel pressed."
+		print_error "Cancelled by user"
 		exit;;
 	  255)
-		echo "ESC pressed."
+		print_error "ESC pressed - cancelled"
 		exit;;
 	esac
 	clear
@@ -108,40 +109,32 @@ if [[ ("$nicehash" == "y" || "$nicehash" == "Y" || "$nicehash" == "yes" || "$nic
 read -e -p "Please enter a whole value, example: 750000 : " nicevalue
 fi
 
-# Make the coin symbol lower case
 coinsymbollower=${coinsymbol,,}
-# make sure algo is lower as well since we are Here
 coinalgo=${coinalgo}
-# and might as well make sure the symbol is upper case
 coinsymbol=${coinsymbol^^}
 
-# Make sure the stratum.symbol config doesnt exist and that the algo file does.
 if [ -f $STORAGE_ROOT/yiimp/site/stratum/config/stratum.${coinsymbollower} ]; then
 	echo
-	echo -e "$RED A file for ${coinsymbol} already exists. Are you sure you want to overwrite?"
+	print_warning "A file for ${coinsymbol} already exists. Are you sure you want to overwrite?"
 	read -r -e -p " A new port will be generated and you will need to update your coind.conf blocknotify line (y/n) :" overwrite
-	echo -e "${NC}"
+	echo
 	if [[ ("$overwrite" == "n" || "$overwrite" == "N" || "$overwrite" == "no" || "$overwrite" == "NO") ]]; then
-		echo -e "$RED Exiting... ${NC}"
+		print_error "Exiting..."
 		echo
 		exit 0
 	fi
 if [ ! -f $STORAGE_ROOT/yiimp/site/stratum/config/$coinalgo.conf ]; then
-  echo -e "$YELLOW Sorry that algo config file doesn't exist in $RED $STORAGE_ROOT/yiimp/site/stratum/config/ $YELLOW please double check and try again. ${NC}"
+  print_error "Algo config file doesn't exist in $STORAGE_ROOT/yiimp/site/stratum/config/ - please double check and try again."
   exit 0
 fi
 fi
 
-# Prevent duplications from people running addport multiple times for the same coin...Also known as asshats...
 if [ -f $STORAGE_ROOT/yiimp/site/stratum/config/$coinsymbollower.$coinalgo.conf ]; then
   if [[ ("$overwrite" == "y" || "$overwrite" == "Y" || "$overwrite" == "yes" || "$overwrite" == "YES") ]]; then
-    # Insert the port in to the new symbol.algo.conf
     sudo sed -i '/port/c\port = '${coinport}'' $coinsymbollower.$coinalgo.conf
-    echo -e "$YELLOW Port updated! Remeber to update your blocknotify line!! ${NC}"
+    print_warning "Port updated! Remember to update your blocknotify line!"
   fi
 else
-# Since this is a new symbol we are going to add it to the other conf files first.
-# First we need to check if this is the first time addport has been ran
 files=(*.$coinalgo.conf)
 if [ -e "${files[0]}" ]; then
 for r in *.$coinalgo.conf; do
@@ -153,36 +146,28 @@ fi
 done
 fi
 
-# Copy the default algo.conf to the new symbol.algo.conf
 sudo cp -r $coinalgo.conf $coinsymbollower.$coinalgo.conf
-  
-# Insert the port in to the new symbol.algo.conf
+
 sudo sed -i '/port/c\port = '${coinport}'' $coinsymbollower.$coinalgo.conf
-  
-# If setting a nicehash value
+
 if [[ ("$nicehash" == "y" || "$nicehash" == "Y" || "$nicehash" == "yes" || "$nicehash" == "YES") ]]; then
   sudo sed -i -e '/difficulty =/a\
 nicehash = '${nicevalue}'' $coinsymbollower.$coinalgo.conf
 fi
 
-# Insert the include in to the new symbol.algo.conf
   sudo sed -i -e '$a\
 [WALLETS]\
 include = '${coinsymbol}'' $coinsymbollower.$coinalgo.conf
 fi
 
-#Again preventing asshat duplications...
 if ! grep -Fxq "exclude = ${coinsymbol}" "$coinalgo.conf"; then
-# Insert the exclude in to algo.conf
   sudo sed -i -e '$a\
 [WALLETS]\
 exclude = '${coinsymbol}'' $coinalgo.conf
 else
-  echo -e "$YELLOW ${coinsymbol} is already in $coinalgo.conf, skipping... Which means you are trying to run this multiple times for the same coin. ${NC}"
+  print_warning "${coinsymbol} is already in $coinalgo.conf, skipping..."
   echo
 fi
-
-# New coin stratum start file
 
 echo '#!/usr/bin/env bash
 #####################################################
@@ -228,13 +213,12 @@ sudo cp -r $STORAGE_ROOT/yiimp/site/stratum/config/stratum.${coinsymbollower} /u
 sudo ufw allow $coinport
 
 echo
-echo "Registering stratum.${coinsymbollower} for autostart at system boot..."
-# Remove any existing @reboot entry for this coin's stratum (deduplication)
+print_status "Registering stratum.${coinsymbollower} for autostart at system boot..."
 (crontab -l 2>/dev/null | grep -v "stratum\.${coinsymbollower} start") | crontab - 2>/dev/null || true
-# Add fresh @reboot entry with full path, 30s delay, and boot log
 (crontab -l 2>/dev/null; echo "@reboot sleep 30 && /usr/bin/stratum.${coinsymbollower} start ${coinsymbollower} >> /var/log/stratum-${coinsymbollower}-boot.log 2>&1") | crontab -
+print_success "Autostart registered"
 echo
-echo -e "$YELLOW Starting your new stratum...${NC}"
+print_status "Starting your new stratum..."
 /usr/bin/stratum.${coinsymbollower} start ${coinsymbollower}
 
 if [[ ("$CREATECOIN" == "true") ]]; then
@@ -242,32 +226,35 @@ if [[ ("$CREATECOIN" == "true") ]]; then
 	COINPORT='""''"${coinport}"''""'
 	COINALGO='""''"${coinalgo}"''""'
 	' | sudo -E tee $STORAGE_ROOT/daemon_builder/.addport.cnf >/dev/null 2>&1
-	echo -e "$CYAN --------------------------------------------------------------------------- 	${NC}"
-	echo -e "$GREEN    The assigned dedicated port for this coins stratum is :$YELLOW $coinport ${NC}"
-	echo -e "$GREEN    Addport finish return to config...										${NC}"
-	echo -e "$CYAN --------------------------------------------------------------------------- 	${NC}"
+
+	print_divider
+	print_success "Dedicated port assigned: ${coinport}"
+	print_info "Returning to config..."
+	print_divider
 	sleep 4
 	exit 0
 else
-	echo -e "$YELLOW Your new stratum is$GREEN started...$YELLOW Do NOT run the start command manually...${NC}"
+	print_divider
+	print_header "Stratum Configuration Complete"
+	print_success "Stratum is started. Do NOT run the start command manually."
 	echo
-	echo -e "$YELLOW To use your new stratum type,$BLUE stratum.${coinsymbollower} start|stop|restart ${coinsymbollower} ${NC}"
+	print_info "Start/Stop/Restart:"
+	echo -e "  ${BLUE}stratum.${coinsymbollower} start|stop|restart ${coinsymbollower}${NC}"
+	print_info "View Screen:"
+	echo -e "  ${BLUE}screen -r ${coinsymbollower}${NC}"
 	echo
-	echo -e "$YELLOW To see the stratum screen type,$MAGENTA screen -r ${coinsymbollower} ${NC}"
+	print_info "Dedicated Port : ${GREEN}${coinport}${NC}"
+	print_info "Algorithm      : ${GREEN}${coinalgo}${NC}"
 	echo
-	echo -e "$YELLOW The assigned dedicated port for this coins stratum is :$GREEN $coinport ${NC}"
-	echo
-	echo -e "$YELLOW The assigned algo for this coin stratum is :$GREEN $coinalgo ${NC}"
-	echo	
-	echo -e "$YELLOW Make sure to add this to the Dedicated Port section in your YiiMP admin panel! ${NC}"
-	echo
-	echo -e "$CYAN  --------------------------------------------------------------------------- 	${NC}"
-	echo -e "$GREEN	Donations are welcome at wallets below:					  	${NC}"
-	echo -e "$YELLOW  BTC: ${NC} $MAGENTA ${BTCDON}	${NC}"
-	echo -e "$YELLOW  LTC: ${NC} $MAGENTA ${LTCDON}	${NC}"
-	echo -e "$YELLOW  ETH: ${NC} $MAGENTA ${ETHDON}	${NC}"
-	echo -e "$YELLOW  BCH: ${NC} $MAGENTA ${DOGEDON}	${NC}"
-	echo -e "$CYAN  --------------------------------------------------------------------------- 	${NC}"
+	print_warning "Make sure to add this to the Dedicated Port section in your YiiMP admin panel!"
+
+	print_divider
+	print_info "Donations are welcome:"
+	echo -e "  ${YELLOW}BTC:${NC}  ${MAGENTA}${BTCDON}${NC}"
+	echo -e "  ${YELLOW}LTC:${NC}  ${MAGENTA}${LTCDON}${NC}"
+	echo -e "  ${YELLOW}ETH:${NC}  ${MAGENTA}${ETHDON}${NC}"
+	echo -e "  ${YELLOW}DOGE:${NC} ${MAGENTA}${DOGEDON}${NC}"
+	print_divider
 	echo
 	cd ~
 	exit 0
