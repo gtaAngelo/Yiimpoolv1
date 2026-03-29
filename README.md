@@ -275,20 +275,6 @@ A drop-in file `/etc/ssh/sshd_config.d/10-yiimpool.conf` is written so the main 
 - **Stratum upgrade — algos/sha3/iniparser parallelism removed** — `-j$(nproc+1)` flags removed from the `make -C algos`, `make -C sha3`, and `make -C iniparser` steps to match the plain serial build required by the updated stratum source.
 - **Stratum upgrade — G++ now explicitly set** — `update-alternatives --set g++` is now called alongside `gcc` at both the start and end of the upgrade, ensuring the compiler pair is always consistent.
 
----
-
-## What's New in v2.6.4
-
-### Bug Fixes
-- **PHP 8.1 installation** — Fixed silent install failure caused by `hide_output` never capturing the real exit code of backgrounded commands (`wait $pid` added); `php8.1-recode` removed (package does not exist for PHP 8.x)
-- **PHP repository detection** — Replaced fragile `*.list` glob with `grep -rq "ondrej/php"` so both `.list` and DEB822 `.sources` formats are detected correctly on Ubuntu 22.04+
-- **PHP repository validation** — Added `apt-cache show php8.1` check after `apt-get update`; stale or broken PPA entries are now detected and the PPA is force-refreshed before attempting any installs
-- **MariaDB repository** — Fixed incorrect `arch=binary=amd64,...` syntax (the `binary=` prefix is not valid in the `arch=` option); packages were never fetched because apt looked for a nonexistent architecture
-- **Dropped Ubuntu 20.04 / 18.04 / 16.04** — Ubuntu 20.04 entered ESM in April 2025 and falls outside Ondrej's PHP PPA support policy; 18.04 and 16.04 are fully end-of-life. All three versions are no longer supported
-
-See [`CHANGELOG.md`](CHANGELOG.md) for the complete list of changes.
-
----
 
 ## Credits
 
