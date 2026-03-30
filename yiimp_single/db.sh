@@ -142,7 +142,7 @@ SQL_FILES=(
     2025-12-16-add_algo_soterg.sql
     2026-03-30-add_parent_coin_id.sgl
     2026-03-30-add_parent_coin_id_yiimp2.sgl
-    2026-03-29-add_algo_hoohash_pepew.sql
+    
 )
 
 for file in "${SQL_FILES[@]}"; do
