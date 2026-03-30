@@ -70,7 +70,7 @@ A clean domain or subdomain pointed to your server's IP address is required befo
 ### Quick Install
 
 ```bash
-curl https://raw.githubusercontent.com/afiniel/Yiimpoolv1/master/install.sh | bash
+curl https://raw.githubusercontent.com/gtaAngelo/Yiimpoolv1/master/install.sh | bash
 ```
 
 ### Configuration Steps
