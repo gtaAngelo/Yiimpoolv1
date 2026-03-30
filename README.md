@@ -1,4 +1,4 @@
-# YiimPool — YiiMP Mining Pool Installer
+# YiimPool — YiiMP Mining Pool Installer1
 
 <p align="center">
   <a href="https://discord.gg/vV3JvN5JFm">
